@@ -138,7 +138,6 @@ export function PolicyCard({ policy }: PolicyCardProps) {
               initial="rest"
               whileHover="hover"
               whileTap="tap"
-              disabled={isLoading}
             >
               <svg
                 className="w-4 h-4"
