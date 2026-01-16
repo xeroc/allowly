@@ -17,6 +17,7 @@
     "@solana/web3.js": "^1.98.0",
     "@tributary-so/sdk": "^1.2.0",
     "bn.js": "^5.2.1",
+    "framer-motion": "^12.26.2",
     "next": "^15.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

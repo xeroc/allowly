@@ -68,7 +68,7 @@ export function CreatePolicyForm() {
 
   if (!wallet.connected) {
     return (
-      <div className="text-center text-gray-500 py-8">
+      <div className="text-center py-8">
         Connect your wallet to create an allowance
       </div>
     );
@@ -79,7 +79,7 @@ export function CreatePolicyForm() {
       <div>
         <label
           htmlFor="childAddress"
-          className="block text-sm font-medium text-gray-700 mb-1"
+          className="block text-sm font-medium  mb-1"
         >
           Child Wallet Address
         </label>
@@ -96,10 +96,7 @@ export function CreatePolicyForm() {
       </div>
 
       <div>
-        <label
-          htmlFor="amount"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
+        <label htmlFor="amount" className="block text-sm font-medium  mb-1">
           Amount (USD)
         </label>
         <input
@@ -117,10 +114,7 @@ export function CreatePolicyForm() {
       </div>
 
       <div>
-        <label
-          htmlFor="frequency"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
+        <label htmlFor="frequency" className="block text-sm font-medium mb-1">
           Frequency
         </label>
         <select

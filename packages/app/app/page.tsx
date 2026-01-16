@@ -3,14 +3,16 @@ import Hero from "@/components/Hero";
 import Features from "@/components/Features";
 import HowItWorks from "@/components/HowItWorks";
 import AppForm from "@/components/AppForm";
+import Footer from "@/components/Footer";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-primary-dark">
       <Hero />
       <HowItWorks />
       <AppForm />
       <Features />
+      <Footer />
     </div>
   );
 }

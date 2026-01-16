@@ -1,4 +1,8 @@
+"use client";
+
 import React from "react";
+import { motion } from "framer-motion";
+import { hoverScale } from "@/lib/animations";
 
 const features = [
   {
@@ -85,35 +89,60 @@ const features = [
 
 export default function Features() {
   return (
-    <section id="features" className="bg-white py-20 sm:py-24 lg:py-28">
+    <section id="features" className="py-24 bg-primary-dark">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
+        <motion.div
+          className="mx-auto max-w-2xl text-center mb-16"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          <motion.h2
+            className="text-4xl sm:text-5xl font-display font-semibold text-white mb-6"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1, duration: 0.6 }}
+          >
             Everything you need for automated allowances
-          </h2>
-          <p className="mt-4 text-lg text-gray-600">
+          </motion.h2>
+          <motion.p
+            className="text-xl text-muted max-w-2xl mx-auto leading-relaxed"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+          >
             Simple, secure, and built for the web3 generation. Allowly makes it
             effortless to give your kids financial freedom.
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
           <dl className="grid max-w-xl grid-cols-1 gap-x-8 gap-y-12 lg:max-w-none lg:grid-cols-2 lg:gap-y-16">
-            {features.map((feature) => (
-              <div
+            {features.map((feature, index) => (
+              <motion.div
                 key={feature.title}
-                className="relative rounded-2xl bg-gray-50 p-8 transition-all duration-200 hover:bg-gray-100 hover:shadow-lg"
+                className="relative p-8 rounded-2xl glass"
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ delay: index * 0.1, duration: 0.6 }}
+                whileHover="hover"
               >
-                <dt className="flex items-center gap-x-4 text-base font-semibold leading-7 text-gray-900">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm transition-transform duration-200 hover:scale-105">
-                    {feature.icon}
-                  </div>
-                  {feature.title}
-                </dt>
-                <dd className="mt-4 text-base leading-7 text-gray-600">
-                  {feature.description}
-                </dd>
-              </div>
+                <motion.div variants={hoverScale}>
+                  <dt className="flex items-start gap-x-4 text-lg font-semibold leading-8 text-white">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/10 border border-accent/20 text-accent flex-shrink-0">
+                      {feature.icon}
+                    </div>
+                    {feature.title}
+                  </dt>
+                  <dd className="mt-4 text-base leading-7 text-muted">
+                    {feature.description}
+                  </dd>
+                </motion.div>
+              </motion.div>
             ))}
           </dl>
         </div>
