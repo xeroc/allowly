@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  server: {
-    allowedDevOrigins: ["192.168.179.24", "allowly.app.local"],
-  },
   reactStrictMode: true,
   output: "export",
   images: {
