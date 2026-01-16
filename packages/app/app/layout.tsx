@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "@solana/wallet-adapter-react-ui/styles.css";
 import { SolanaWalletProvider } from "@/components/WalletProvider";
+import Script from "next/script";
 
 export const metadata: Metadata = {
   title: {
@@ -84,6 +85,11 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased">
         <SolanaWalletProvider>{children}</SolanaWalletProvider>
+        <Script
+          defer
+          data-domain="allowly.app"
+          src="https://p.chainsquad.com/js/script.js"
+        />
       </body>
     </html>
   );
