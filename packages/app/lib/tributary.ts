@@ -2,13 +2,14 @@ import {
   Connection,
   PublicKey,
   Transaction,
-  TransactionInstruction,
+  TransactionSignature,
+  SignatureStatus,
 } from "@solana/web3.js";
 import {
   Tributary,
   PaymentFrequency,
-  PaymentPolicy,
   UserPayment,
+  createMemoBuffer,
 } from "@tributary-so/sdk";
 import * as anchor from "@coral-xyz/anchor";
 import BN from "bn.js";
@@ -45,6 +46,48 @@ interface AnchorWallet {
   publicKey: PublicKey;
   signTransaction: (transaction: Transaction) => Promise<Transaction>;
   signAllTransactions: (transactions: Transaction[]) => Promise<Transaction[]>;
+}
+
+async function confirmTransactionWithStatus(
+  connection: Connection,
+  signature: TransactionSignature,
+  commitment: "processed" | "confirmed" | "finalized" = "confirmed",
+  timeout: number = 60000, // 60 seconds
+): Promise<SignatureStatus> {
+  const start = Date.now();
+
+  while (Date.now() - start < timeout) {
+    const { value } = await connection.getSignatureStatus(signature);
+
+    if (value === null) {
+      // Transaction not found yet, wait and retry
+      await sleep(500);
+      continue;
+    }
+
+    // Check if there's an error
+    if (value.err) {
+      throw new Error(`Transaction failed: ${JSON.stringify(value.err)}`);
+    }
+
+    // Check if we've reached the desired commitment level
+    if (
+      commitment === "processed" ||
+      (commitment === "confirmed" &&
+        value.confirmationStatus !== "processed") ||
+      (commitment === "finalized" && value.confirmationStatus === "finalized")
+    ) {
+      return value;
+    }
+
+    await sleep(500);
+  }
+
+  throw new Error(`Transaction confirmation timeout after ${timeout}ms`);
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function getTributary(wallet: WalletContextState): Tributary {
@@ -113,54 +156,49 @@ export async function createAllowance(
     true,
     null,
     paymentFrequency,
-    [],
+    createMemoBuffer("allowly.app", 64),
     undefined,
     undefined,
     false,
   );
 
   const transaction = new Transaction().add(...instructions);
-  const { blockhash } = await new Connection(
-    config.rpcUrl,
-  ).getLatestBlockhash();
+  const { blockhash } =
+    await tributary.program.provider.connection.getLatestBlockhash();
   transaction.recentBlockhash = blockhash;
   transaction.feePayer = parentWallet.publicKey!;
 
   const signedTx = await parentWallet.signTransaction!(transaction);
-  await new Connection(config.rpcUrl).sendRawTransaction(signedTx.serialize());
-
-  await new Promise((resolve) => setTimeout(resolve, 2000));
-
-  const policies = await tributary.getPaymentPoliciesByUser(
-    parentWallet.publicKey!,
+  const txid = await tributary.program.provider.connection.sendRawTransaction(
+    signedTx.serialize(),
   );
+  console.log(txid);
+  await confirmTransactionWithStatus(tributary.connection, txid, "confirmed");
+
   const userPayment = await getUserPayment(parentWallet);
 
-  const newPolicy = policies.find(
-    (p) =>
-      p.account.recipient.toString() === childWallet.toString() &&
-      (userPayment
-        ? p.account.userPayment.toString() === userPayment.pubkey.toString()
-        : true),
-  );
-
+  const newPolicyPda = tributary.getPaymentPolicyPda(
+    userPayment!.pubkey,
+    userPayment!.userPayment.createdPoliciesCount,
+  ).address;
+  const newPolicy = await tributary.getPaymentPolicy(newPolicyPda);
   if (!newPolicy) {
     throw new Error("Failed to find created policy");
   }
 
   return {
-    id: newPolicy.account.policyId,
+    id: newPolicy.policyId,
     from: userPayment?.userPayment.owner || parentWallet.publicKey!,
-    to: newPolicy.account.recipient,
-    amount: newPolicy.account.policyType.subscription?.amount || new BN(0),
-    frequency: newPolicy.account.policyType.subscription?.paymentFrequency || {
+    to: newPolicy.recipient,
+    amount: newPolicy.policyType.subscription?.amount || new BN(0),
+    frequency: newPolicy.policyType.subscription?.paymentFrequency || {
       weekly: {},
     },
-    status: newPolicy.account.status.active ? "active" : "paused",
+    status: newPolicy.status.active ? "active" : "paused",
     nextPaymentDue:
-      newPolicy.account.policyType.subscription?.nextPaymentDue || new BN(0),
-    totalPaid: newPolicy.account.totalPaid,
-    createdAt: newPolicy.account.createdAt,
+      newPolicy.policyType.subscription?.nextPaymentDue || new BN(0),
+    totalPaid: newPolicy.totalPaid,
+    createdAt: newPolicy.createdAt,
   };
 }
 
@@ -169,8 +207,10 @@ export async function getPolicies(
 ): Promise<PolicyListResult> {
   const tributary = getTributary(wallet);
   const userPayment = await getUserPayment(wallet);
-
-  const policies = await tributary.getPaymentPoliciesByUser(wallet.publicKey!);
+  const policies = await tributary.getPaymentPoliciesByUser(
+    userPayment!.pubkey,
+  );
+  console.log(policies);
 
   const subscriptionPolicies: SubscriptionPolicy[] = [];
 

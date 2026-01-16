@@ -1,18 +1,18 @@
 import React from "react";
 
-export function Hero() {
+export default function Hero() {
   return (
     <section className="relative overflow-hidden bg-gradient-to-b from-white to-gray-50 py-20 sm:py-32 lg:pb-32 xl:pb-36">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="relative z-10 mx-auto max-w-2xl text-center">
           <div className="mb-6 inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-600 ring-1 ring-inset ring-blue-600/20">
             <span className="mr-2">🎉</span>
-            Now accepting early access signups
+            Now open to everyone!
           </div>
 
           <h1 className="mb-6 text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
             Pocket money,{" "}
-            <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[#9945FF] to-[#14F195] bg-clip-text text-transparent font-bold">
               reimagined
             </span>{" "}
             for the web3 generation
@@ -26,10 +26,10 @@ export function Hero() {
 
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
             <a
-              href="#waitlist"
+              href="/#get-started"
               className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-6 py-3 text-base font-semibold text-white shadow-sm transition-all duration-200 hover:bg-blue-700 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
             >
-              Join the Waitlist
+              Get Started
               <svg
                 className="ml-2 -mr-1 h-5 w-5"
                 fill="none"
@@ -46,7 +46,7 @@ export function Hero() {
             </a>
 
             <a
-              href="#how-it-works"
+              href="/#how-it-works"
               className="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-base font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 transition-all duration-200 hover:bg-gray-50 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-300"
             >
               Learn how it works
@@ -67,5 +67,3 @@ export function Hero() {
     </section>
   );
 }
-
-export default Hero;

@@ -65,7 +65,7 @@ export function PolicyCard({ policy }: PolicyCardProps) {
   const nextPaymentDate = new Date(policy.nextPaymentDue.toNumber() * 1000);
 
   return (
-    <div className="border border-gray-200 rounded-lg p-4 shadow-sm bg-white">
+    <div className="border border-gray-200 rounded-lg p-4 shadow-sm bg-white mb-2">
       <div className="space-y-2">
         <div>
           <span className="text-sm text-gray-500">Recipient:</span>
