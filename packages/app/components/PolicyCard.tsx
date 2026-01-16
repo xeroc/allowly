@@ -8,6 +8,7 @@ import {
   cancelPolicy,
   SubscriptionPolicy,
 } from "@/lib/tributary";
+import { usePolicyRefresh } from "@/components/PolicyRefreshContext";
 
 interface PolicyCardProps {
   policy: SubscriptionPolicy;
@@ -23,6 +24,7 @@ function formatFrequency(frequency: SubscriptionPolicy["frequency"]): string {
 
 export function PolicyCard({ policy }: PolicyCardProps) {
   const wallet = useWallet();
+  const { triggerRefresh } = usePolicyRefresh();
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState(policy.status);
 
@@ -55,6 +57,7 @@ export function PolicyCard({ policy }: PolicyCardProps) {
     setLoading(true);
     try {
       await cancelPolicy(wallet, policy.id);
+      triggerRefresh();
     } catch (error) {
       console.error("Failed to cancel policy:", error);
     }

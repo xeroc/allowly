@@ -3,6 +3,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { ConnectWallet } from "@/components/ConnectWallet";
 import { CreatePolicyForm } from "@/components/CreatePolicyForm";
 import { PolicyList } from "@/components/PolicyList";
+import { PolicyRefreshProvider } from "@/components/PolicyRefreshContext";
 
 export default function AppForm() {
   const { connected } = useWallet();
@@ -18,10 +19,12 @@ export default function AppForm() {
       </p>
       <div className="text-center max-w-md mx-auto">
         {connected && (
-          <div className="grid grid-flow-row gap-4">
-            <CreatePolicyForm />
-            <PolicyList />
-          </div>
+          <PolicyRefreshProvider>
+            <div className="grid grid-flow-row gap-4">
+              <CreatePolicyForm />
+              <PolicyList />
+            </div>
+          </PolicyRefreshProvider>
         )}
 
         <ConnectWallet />

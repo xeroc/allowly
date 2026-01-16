@@ -91,7 +91,7 @@ function sleep(ms: number): Promise<void> {
 }
 
 function getTributary(wallet: WalletContextState): Tributary {
-  const connection = new Connection(config.rpcUrl);
+  const connection = new Connection(config.rpcUrl, "processed");
   const anchorWallet: AnchorWallet = {
     publicKey: wallet.publicKey!,
     signTransaction: wallet.signTransaction!,
@@ -210,8 +210,6 @@ export async function getPolicies(
   const policies = await tributary.getPaymentPoliciesByUser(
     userPayment!.pubkey,
   );
-  console.log(policies);
-
   const subscriptionPolicies: SubscriptionPolicy[] = [];
 
   for (const p of policies) {
@@ -251,14 +249,16 @@ export async function pausePolicy(
   );
 
   const transaction = new Transaction().add(instruction);
-  const { blockhash } = await new Connection(
-    config.rpcUrl,
-  ).getLatestBlockhash();
+  const { blockhash } = await tributary.connection.getLatestBlockhash();
   transaction.recentBlockhash = blockhash;
   transaction.feePayer = wallet.publicKey!;
 
   const signedTx = await wallet.signTransaction!(transaction);
-  await new Connection(config.rpcUrl).sendRawTransaction(signedTx.serialize());
+  const txid = await tributary.connection.sendRawTransaction(
+    signedTx.serialize(),
+  );
+  console.log(txid);
+  await confirmTransactionWithStatus(tributary.connection, txid, "confirmed");
 }
 
 export async function resumePolicy(
@@ -275,14 +275,16 @@ export async function resumePolicy(
   );
 
   const transaction = new Transaction().add(instruction);
-  const { blockhash } = await new Connection(
-    config.rpcUrl,
-  ).getLatestBlockhash();
+  const { blockhash } = await tributary.connection.getLatestBlockhash();
   transaction.recentBlockhash = blockhash;
   transaction.feePayer = wallet.publicKey!;
 
   const signedTx = await wallet.signTransaction!(transaction);
-  await new Connection(config.rpcUrl).sendRawTransaction(signedTx.serialize());
+  const txid = await tributary.connection.sendRawTransaction(
+    signedTx.serialize(),
+  );
+  console.log(txid);
+  await confirmTransactionWithStatus(tributary.connection, txid, "confirmed");
 }
 
 export async function cancelPolicy(
@@ -295,12 +297,14 @@ export async function cancelPolicy(
   const instruction = await tributary.deletePaymentPolicy(tokenMint, policyId);
 
   const transaction = new Transaction().add(instruction);
-  const { blockhash } = await new Connection(
-    config.rpcUrl,
-  ).getLatestBlockhash();
+  const { blockhash } = await tributary.connection.getLatestBlockhash();
   transaction.recentBlockhash = blockhash;
   transaction.feePayer = wallet.publicKey!;
 
   const signedTx = await wallet.signTransaction!(transaction);
-  await new Connection(config.rpcUrl).sendRawTransaction(signedTx.serialize());
+  const txid = await tributary.connection.sendRawTransaction(
+    signedTx.serialize(),
+  );
+  console.log(txid);
+  await confirmTransactionWithStatus(tributary.connection, txid, "confirmed");
 }

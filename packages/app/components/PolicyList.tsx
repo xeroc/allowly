@@ -3,10 +3,12 @@ import { useEffect, useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { getPolicies, PolicyListResult } from "@/lib/tributary";
 import { PolicyCard } from "./PolicyCard";
+import { usePolicyRefresh } from "@/components/PolicyRefreshContext";
 
 export function PolicyList() {
   const wallet = useWallet();
   const { connected, publicKey } = wallet;
+  const { refreshKey } = usePolicyRefresh();
   const [policies, setPolicies] = useState<PolicyListResult>({
     policies: [],
     userPaymentPubkey: null,
@@ -25,7 +27,7 @@ export function PolicyList() {
       setLoading(false);
     }
     fetch();
-  }, [connected, publicKey, wallet]);
+  }, [connected, publicKey, wallet, refreshKey]);
 
   if (!connected) return null;
   if (loading) return <div>Loading policies...</div>;

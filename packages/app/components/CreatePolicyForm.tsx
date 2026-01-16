@@ -4,11 +4,13 @@ import { useState, FormEvent } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { createAllowance } from "@/lib/tributary";
+import { usePolicyRefresh } from "@/components/PolicyRefreshContext";
 
 type Frequency = "weekly" | "biweekly" | "monthly";
 
 export function CreatePolicyForm() {
   const wallet = useWallet();
+  const { triggerRefresh } = usePolicyRefresh();
   const [childAddress, setChildAddress] = useState("");
   const [amount, setAmount] = useState("");
   const [frequency, setFrequency] = useState<Frequency>("weekly");
@@ -52,6 +54,7 @@ export function CreatePolicyForm() {
       setChildAddress("");
       setAmount("");
       setFrequency("weekly");
+      triggerRefresh();
     } catch (err) {
       setStatus({
         type: "error",
