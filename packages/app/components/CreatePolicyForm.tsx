@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, FormEvent } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { createAllowance } from "@/lib/tributary";
 import { usePolicyRefresh } from "@/components/PolicyRefreshContext";
+import { buttonPress, inputFocus } from "@/lib/animations";
 
 type Frequency = "weekly" | "biweekly" | "monthly";
 
@@ -68,87 +70,258 @@ export function CreatePolicyForm() {
 
   if (!wallet.connected) {
     return (
-      <div className="text-center py-8">
-        Connect your wallet to create an allowance
-      </div>
+      <motion.div
+        className="text-center py-12"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+      >
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-16 h-16 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center">
+            <svg
+              className="w-8 h-8 text-accent"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1.5}
+                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+              />
+            </svg>
+          </div>
+          <p className="text-muted">
+            Connect your wallet to create an allowance
+          </p>
+        </div>
+      </motion.div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
-      <div>
+    <motion.form
+      onSubmit={handleSubmit}
+      className="space-y-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.2 }}
+    >
+      <div className="space-y-1">
         <label
           htmlFor="childAddress"
-          className="block text-sm font-medium  mb-1"
+          className="block text-sm font-medium text-white"
         >
-          Child Wallet Address
+          Recipient Wallet
         </label>
-        <input
-          id="childAddress"
-          type="text"
-          value={childAddress}
-          onChange={(e) => setChildAddress(e.target.value)}
-          placeholder="Enter Solana wallet address"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          required
-          disabled={loading}
-        />
+        <motion.div
+          className="relative"
+          variants={inputFocus}
+          initial="rest"
+          whileFocus="focus"
+        >
+          <input
+            id="childAddress"
+            type="text"
+            value={childAddress}
+            onChange={(e) => setChildAddress(e.target.value)}
+            placeholder="Solana wallet address"
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-muted focus:outline-none transition-all duration-200"
+            required
+            disabled={loading}
+          />
+        </motion.div>
       </div>
 
-      <div>
-        <label htmlFor="amount" className="block text-sm font-medium  mb-1">
-          Amount (USD)
-        </label>
-        <input
-          id="amount"
-          type="number"
-          min="0.01"
-          step="0.01"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          placeholder="0.00"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          required
-          disabled={loading}
-        />
-      </div>
-
-      <div>
-        <label htmlFor="frequency" className="block text-sm font-medium mb-1">
-          Frequency
-        </label>
-        <select
-          id="frequency"
-          value={frequency}
-          onChange={(e) => setFrequency(e.target.value as Frequency)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          disabled={loading}
+      <div className="space-y-1">
+        <label
+          htmlFor="amount"
+          className="block text-sm font-medium text-white"
         >
-          <option value="weekly">Weekly</option>
-          <option value="biweekly">Biweekly</option>
-          <option value="monthly">Monthly</option>
-        </select>
-      </div>
-
-      {status && (
-        <div
-          className={`p-3 rounded-md text-sm ${
-            status.type === "success"
-              ? "bg-green-50 text-green-700 border border-green-200"
-              : "bg-red-50 text-red-700 border border-red-200"
-          }`}
-        >
-          {status.message}
+          Amount
+        </label>
+        <div className="relative">
+          <motion.div
+            className="relative"
+            variants={inputFocus}
+            initial="rest"
+            whileFocus="focus"
+          >
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted font-medium">
+              $
+            </span>
+            <input
+              id="amount"
+              type="number"
+              min="0.01"
+              step="0.01"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0.00"
+              className="w-full pl-8 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-muted focus:outline-none transition-all duration-200"
+              required
+              disabled={loading}
+            />
+          </motion.div>
+          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted">
+            USDC
+          </span>
         </div>
-      )}
+      </div>
 
-      <button
+      <div className="space-y-1">
+        <label
+          htmlFor="frequency"
+          className="block text-sm font-medium text-white"
+        >
+          How often
+        </label>
+        <motion.div
+          className="relative"
+          variants={inputFocus}
+          initial="rest"
+          whileFocus="focus"
+        >
+          <select
+            id="frequency"
+            value={frequency}
+            onChange={(e) => setFrequency(e.target.value as Frequency)}
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none transition-all duration-200 appearance-none cursor-pointer"
+            disabled={loading}
+          >
+            <option value="weekly" className="bg-primary-dark">
+              Weekly
+            </option>
+            <option value="biweekly" className="bg-primary-dark">
+              Every 2 weeks
+            </option>
+            <option value="monthly" className="bg-primary-dark">
+              Monthly
+            </option>
+          </select>
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+            <svg
+              className="w-5 h-5 text-muted"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </div>
+        </motion.div>
+      </div>
+
+      <AnimatePresence mode="wait">
+        {status && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: "auto" }}
+            exit={{ opacity: 0, y: -10, height: 0 }}
+            className={`p-4 rounded-xl text-sm ${
+              status.type === "success"
+                ? "bg-accent/10 border border-accent/20 text-accent"
+                : "bg-red-500/10 border border-red-500/20 text-red-400"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              {status.type === "success" ? (
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              ) : (
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              )}
+              {status.message}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <motion.button
         type="submit"
         disabled={loading}
-        className="w-full py-2 px-4 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="w-full relative overflow-hidden rounded-xl bg-accent py-4 text-white font-semibold shadow-glow disabled:opacity-50"
+        variants={buttonPress}
+        initial="rest"
+        whileHover="hover"
+        whileTap="tap"
       >
-        {loading ? "Creating..." : "Create Allowance"}
-      </button>
-    </form>
+        <span className="relative z-10 flex items-center justify-center gap-2">
+          {loading ? (
+            <>
+              <svg
+                className="w-5 h-5 animate-spin"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  className="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
+              </svg>
+              Creating...
+            </>
+          ) : (
+            <>
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              Create Allowance
+            </>
+          )}
+        </span>
+      </motion.button>
+
+      <p className="text-xs text-muted text-center">
+        Transactions are secured by Solana. You maintain full control.
+      </p>
+    </motion.form>
   );
 }
