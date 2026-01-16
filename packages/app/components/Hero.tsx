@@ -52,22 +52,21 @@ export default function Hero() {
             className="mb-6 text-5xl sm:text-6xl lg:text-7xl font-display font-semibold tracking-tight text-white leading-tight"
             variants={fadeInUp}
           >
-            Pocket money,{" "}
-            <span className="bg-gradient-to-r from-[#9945FF] to-[#14F195] bg-clip-text text-transparent font-bold">
-              reimagined
-            </span>{" "}
-            for the
+            Send money to the people you{" "}
+            <span className="text-gradient-subtle">love</span>.
             <br className="hidden sm:block" />
-            <span className="text-gradient-subtle">web3 generation</span>
+            <span className="bg-gradient-to-r from-[#9945FF] to-[#14F195] bg-clip-text text-transparent font-bold">
+              On autopilot.
+            </span>
           </motion.h1>
 
           <motion.p
             className="mb-10 text-lg sm:text-xl text-muted max-w-2xl mx-auto leading-relaxed"
             variants={fadeInUp}
           >
-            Set up automated USDC allowances for your kids in seconds. Parent
-            wallet controls everything — no apps, no approvals, just simple,
-            reliable transfers via Tributary.
+            Set up automated USDC transfers for parents, partners, siblings,
+            anyone you care about. No apps, no approvals — just simple, reliable
+            recurring payments on Solana.
           </motion.p>
 
           <motion.div
@@ -160,7 +159,7 @@ export default function Hero() {
                   d="M13 10V3L4 14h7v7l9-11h-7z"
                 />
               </svg>
-              Instant transfers
+              Quick setup
             </span>
           </motion.div>
         </motion.div>
