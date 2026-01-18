@@ -125,13 +125,15 @@ async function getUserPayment(
   wallet: WalletContextState,
 ): Promise<{ userPayment: UserPayment; pubkey: PublicKey } | null> {
   const tributary = getTributary(wallet);
-  const userPayments = await tributary.getAllUserPaymentsByOwner(
+  const usetPaymentsPda = tributary.getUserPaymentPda(
     wallet.publicKey!,
+    new PublicKey(config.usdcMint),
   );
-  if (userPayments.length > 0) {
+  const userPayment = await tributary.getUserPayment(usetPaymentsPda.address);
+  if (userPayment) {
     return {
-      userPayment: userPayments[0]!.account,
-      pubkey: userPayments[0]!.publicKey,
+      userPayment: userPayment,
+      pubkey: usetPaymentsPda.address,
     };
   }
   return null;
