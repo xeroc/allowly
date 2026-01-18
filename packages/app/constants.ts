@@ -17,7 +17,7 @@ const config: Config = {
     "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
   gateway:
     process.env.NEXT_PUBLIC_GATEWAY_ADDRESS ||
-    "CwNybLVQ3sVmcZ3Q1veS6x99gUZcAF2duNDe3qbcEMGr",
+    "6ntm5rWqDFefET8RFyZV73FcdqxPMbc7Tso3pCMWk4w4",
 };
 
 export default config;
