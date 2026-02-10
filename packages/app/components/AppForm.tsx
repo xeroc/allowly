@@ -9,8 +9,11 @@ import { PolicyList } from "@/components/PolicyList";
 import { PolicyRefreshProvider } from "@/components/PolicyRefreshContext";
 import { fadeInUp } from "@/lib/animations";
 
-export default function AppForm() {
+type AppFormMode = "human" | "agent";
+
+export default function AppForm({ mode = "human" }: { mode?: AppFormMode }) {
   const { connected } = useWallet();
+  const isHuman = mode === "human";
 
   return (
     <section className="py-24 px-4 bg-primary-dark" id="get-started">
@@ -29,7 +32,7 @@ export default function AppForm() {
             viewport={{ once: true }}
             transition={{ delay: 0.1, duration: 0.6 }}
           >
-            Configure Your Subscription
+            {isHuman ? "Configure Your Subscription" : "Configure Agent Allowance"}
           </motion.h2>
           <motion.p
             className="text-xl text-muted max-w-2xl mx-auto leading-relaxed"
@@ -38,6 +41,18 @@ export default function AppForm() {
             viewport={{ once: true }}
             transition={{ delay: 0.2, duration: 0.6 }}
           >
+            {isHuman ? (
+              <>
+                Set up recurring USDC transfers to your child's wallet. One-time
+                approval, automated payments forever.
+              </>
+            ) : (
+              <>
+                Set up pay-as-you-go USDC allowance for your AI agent. Agent
+                autonomously claims funds on-demand within budget limits.
+              </>
+            )}
+          </motion.p>
             Create automated allowance policies for your family members. Set
             amounts, frequencies, and let the blockchain handle the rest.
           </motion.p>

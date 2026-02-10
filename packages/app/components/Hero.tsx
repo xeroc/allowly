@@ -9,7 +9,11 @@ import {
   floatingAnimation,
 } from "@/lib/animations";
 
-export default function Hero() {
+type HeroMode = "human" | "agent";
+
+export default function Hero({ mode = "human" }: { mode?: HeroMode }) {
+  const isHuman = mode === "human";
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-primary-dark">
       <div className="absolute inset-0 bg-mesh" />
@@ -52,21 +56,38 @@ export default function Hero() {
             className="mb-6 text-5xl sm:text-6xl lg:text-7xl font-display font-semibold tracking-tight text-white leading-tight"
             variants={fadeInUp}
           >
-            Send money to the people you{" "}
-            <span className="text-gradient-subtle">love</span>.
-            <br className="hidden sm:block" />
-            <span className="bg-gradient-to-r from-[#9945FF] to-[#14F195] bg-clip-text text-transparent font-bold">
-              On autopilot.
-            </span>
+            {isHuman ? (
+              <>
+                Send money to the people you{" "}
+                <span className="text-gradient-subtle">love</span>.
+                <br className="hidden sm:block" />
+                <span className="bg-gradient-to-r from-[#9945FF] to-[#14F195] bg-clip-text text-transparent font-bold">
+                  On autopilot.
+                </span>
+              </>
+            ) : (
+              <>
+                Autonomous allowances.{" "}
+                <br className="hidden sm:block" />
+                <span className="bg-gradient-to-r from-[#9945FF] to-[#14F195] bg-clip-text text-transparent font-bold">
+                  For AI agents.
+                </span>
+              </>
+            )}
           </motion.h1>
 
           <motion.p
             className="mb-10 text-lg sm:text-xl text-muted max-w-2xl mx-auto leading-relaxed"
             variants={fadeInUp}
           >
-            Set up automated USDC transfers for parents, partners, siblings,
-            anyone you care about. No apps, no approvals — just simple, reliable
-            recurring payments on Solana.
+            {isHuman ? (
+              <>Set up automated USDC transfers for parents, partners, siblings,
+              anyone you care about. No apps, no approvals — just simple, reliable
+              recurring payments on Solana.</>
+            ) : (
+              <>Set up pay-as-you-go USDC allowances for AI agents. They claim funds
+              on-demand within budget limits. Budget depletes, resets periodically.</>
+            )}
           </motion.p>
 
           <motion.div

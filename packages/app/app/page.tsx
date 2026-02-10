@@ -1,19 +1,189 @@
 "use client";
-import Hero from "@/components/Hero";
-import Features from "@/components/Features";
-import HowItWorks from "@/components/HowItWorks";
-import UseCases from "@/components/UseCases";
-import AppForm from "@/components/AppForm";
-import Footer from "@/components/Footer";
+import { motion } from "framer-motion";
+import { fadeInUp, fadeInUpStagger } from "@/lib/animations";
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-primary-dark">
-      <Hero />
-      <HowItWorks />
-      <UseCases />
-      <AppForm />
-      <Features />
+      <div className="absolute inset-0 bg-mesh" />
+
+      {/* Ambient background effects */}
+      <motion.div
+        className="absolute top-1/4 left-1/4 w-96 h-96 bg-accent/5 rounded-full blur-3xl"
+        animate="animate"
+        variants={{
+          animate: {
+            y: [0, 20, 0],
+            transition: { duration: 6, repeat: Infinity, ease: "easeInOut" },
+          },
+        }}
+      />
+
+      <motion.div
+        className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-accent/3 rounded-full blur-3xl"
+        animate="animate"
+        variants={{
+          animate: {
+            y: [0, -15, 0],
+            transition: { duration: 5, repeat: Infinity, ease: "easeInOut" },
+          },
+        }}
+      />
+
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20">
+        <motion.div
+          className="relative z-10 mx-auto max-w-4xl text-center"
+          initial="hidden"
+          animate="visible"
+          variants={fadeInUpStagger}
+        >
+          <motion.div className="mb-8" variants={fadeInUp}>
+            <span className="inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-sm font-medium text-accent-light border border-accent/20">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
+              </span>
+              Choose your mode
+            </span>
+          </motion.div>
+
+          <motion.h1
+            className="mb-6 text-5xl sm:text-6xl lg:text-7xl font-display font-semibold tracking-tight text-white leading-tight"
+            variants={fadeInUp}
+          >
+            Automated payments.
+            <br className="hidden sm:block" />
+            <span className="bg-gradient-to-r from-[#9945FF] to-[#14F195] bg-clip-text text-transparent font-bold">
+              Who are you sending to?
+            </span>
+          </motion.h1>
+
+          <motion.p
+            className="mb-12 text-lg sm:text-xl text-muted max-w-2xl mx-auto leading-relaxed"
+            variants={fadeInUp}
+          >
+            Set up automated USDC transfers on Solana. Choose the mode that fits
+            your use case.
+          </motion.p>
+
+          {/* Mode Selector Cards */}
+          <motion.div
+            className="grid md:grid-cols-2 gap-6 mb-12"
+            variants={fadeInUp}
+          >
+            {/* Human Mode Card */}
+            <motion.a
+              href="/human"
+              className="group relative overflow-hidden rounded-2xl glass border border-accent/20 p-8 hover:border-accent/40 transition-all duration-300"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="relative z-10">
+                <div className="mb-4 inline-flex items-center justify-center w-16 h-16 rounded-xl bg-accent/10 border border-accent/20">
+                  <svg
+                    className="w-8 h-8 text-accent"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                    />
+                  </svg>
+                </div>
+
+                <h2 className="mb-3 text-2xl font-display font-semibold text-white">
+                  Human Mode
+                </h2>
+
+                <p className="mb-4 text-muted">
+                  Recurring allowances for family, partners, anyone you care about.
+                  Payments execute automatically on schedule.
+                </p>
+
+                <div className="flex items-center gap-2 text-accent font-medium group-hover:gap-3 transition-all">
+                  <span>Pocket Money</span>
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 7l5 5m0 0l-5 5m5-5H6"
+                    />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Hover gradient effect */}
+              <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+            </motion.a>
+
+            {/* Agent Mode Card */}
+            <motion.a
+              href="/agent"
+              className="group relative overflow-hidden rounded-2xl glass border border-accent/20 p-8 hover:border-accent/40 transition-all duration-300"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="relative z-10">
+                <div className="mb-4 inline-flex items-center justify-center w-16 h-16 rounded-xl bg-accent/10 border border-accent/20">
+                  <svg
+                    className="w-8 h-8 text-accent"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
+                  </svg>
+                </div>
+
+                <h2 className="mb-3 text-2xl font-display font-semibold text-white">
+                  Agent Mode
+                </h2>
+
+                <p className="mb-4 text-muted">
+                  Autonomous allowances for AI agents. Set policies, agents claim
+                  funds within limits.
+                </p>
+
+                <div className="flex items-center gap-2 text-accent font-medium group-hover:gap-3 transition-all">
+                  <span>Allowly Agent</span>
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 7l5 5m0 0l-5 5m5-5H6"
+                    />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Hover gradient effect */}
+              <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+            </motion.a>
+          </motion.div>
+        </motion.div>
+      </div>
+
       <Footer />
     </div>
   );

@@ -30,6 +30,18 @@ export interface SubscriptionPolicy {
   createdAt: BN;
 }
 
+export interface PayAsYouGoPolicy {
+  id: number;
+  from: PublicKey;
+  to: PublicKey;
+  maxAmountPerPeriod: BN;
+  maxChunkAmount: BN;
+  periodLength: BN;
+  status: "active" | "paused";
+  totalPaid: BN;
+  createdAt: BN;
+}
+
 export interface CreateSubscriptionParams {
   parentWallet: WalletContextState;
   childWallet: PublicKey;
@@ -37,8 +49,17 @@ export interface CreateSubscriptionParams {
   frequency: "daily" | "weekly" | "biweekly" | "monthly";
 }
 
+export interface CreatePayAsYouGoParams {
+  humanWallet: WalletContextState;
+  agentWallet: PublicKey;
+  maxBudget: number;         // Max USDC per period (e.g., €500)
+  maxPerClaim: number;       // Max per single claim (e.g., €50)
+  periodDays: number;        // Period length in days (e.g., 30 days)
+}
+
 export interface PolicyListResult {
-  policies: SubscriptionPolicy[];
+  subscriptions: SubscriptionPolicy[];
+  payAsYouGo: PayAsYouGoPolicy[];
   userPaymentPubkey: PublicKey | null;
 }
 
@@ -204,6 +225,68 @@ export async function createAllowance(
   };
 }
 
+export async function createPayAsYouGo(
+  params: CreatePayAsYouGoParams,
+): Promise<PayAsYouGoPolicy> {
+  const { humanWallet, agentWallet, maxBudget, maxPerClaim, periodDays } = params;
+  const tributary = getTributary(humanWallet);
+
+  const maxAmountPerPeriod = usdToBN(maxBudget);
+  const maxChunkAmount = usdToBN(maxPerClaim);
+  const periodLength = new BN(periodDays * 24 * 60 * 60);
+  const tokenMint = new PublicKey(config.usdcMint);
+  const gateway = new PublicKey(config.gateway);
+
+  const instructions = await tributary.createPayAsYouGo(
+    tokenMint,
+    agentWallet,
+    gateway,
+    maxAmountPerPeriod,
+    maxChunkAmount,
+    periodLength,
+    createMemoBuffer("allowly.app: agent allowance", 64),
+  );
+
+  const transaction = new Transaction().add(...instructions);
+  const { blockhash } =
+    await tributary.program.provider.connection.getLatestBlockhash();
+  transaction.recentBlockhash = blockhash;
+  transaction.feePayer = humanWallet.publicKey!;
+
+  const signedTx = await humanWallet.signTransaction!(transaction);
+  const txid = await tributary.program.provider.connection.sendRawTransaction(
+    signedTx.serialize(),
+  );
+  console.log(txid);
+  await confirmTransactionWithStatus(tributary.connection, txid, "confirmed");
+
+  const userPayment = await getUserPayment(humanWallet);
+
+  const newPolicyPda = tributary.getPaymentPolicyPda(
+    userPayment!.pubkey,
+    userPayment!.userPayment.createdPoliciesCount,
+  ).address;
+  const newPolicy = await tributary.getPaymentPolicy(newPolicyPda);
+  if (!newPolicy) {
+    throw new Error("Failed to find created policy");
+  }
+
+  return {
+    id: newPolicy.policyId,
+    from: userPayment?.userPayment.owner || humanWallet.publicKey!,
+    to: newPolicy.recipient,
+    maxAmountPerPeriod:
+      newPolicy.policyType.payAsYouGo?.maxAmountPerPeriod || new BN(0),
+    maxChunkAmount:
+      newPolicy.policyType.payAsYouGo?.maxChunkAmount || new BN(0),
+    periodLength:
+      newPolicy.policyType.payAsYouGo?.periodLengthSeconds || new BN(0),
+    status: newPolicy.status.active ? "active" : "paused",
+    totalPaid: newPolicy.totalPaid,
+    createdAt: newPolicy.createdAt,
+  };
+}
+
 export async function getPolicies(
   wallet: WalletContextState,
 ): Promise<PolicyListResult> {
@@ -213,6 +296,7 @@ export async function getPolicies(
     userPayment!.pubkey,
   );
   const subscriptionPolicies: SubscriptionPolicy[] = [];
+  const payAsYouGoPolicies: PayAsYouGoPolicy[] = [];
 
   for (const p of policies) {
     if ("subscription" in p.account.policyType) {
@@ -228,11 +312,28 @@ export async function getPolicies(
         totalPaid: p.account.totalPaid,
         createdAt: p.account.createdAt,
       });
+    } else if ("payAsYouGo" in p.account.policyType) {
+      const owner = userPayment?.userPayment.owner || wallet.publicKey!;
+      payAsYouGoPolicies.push({
+        id: p.account.policyId,
+        from: owner,
+        to: p.account.recipient,
+        maxAmountPerPeriod:
+          p.account.policyType.payAsYouGo!.maxAmountPerPeriod || new BN(0),
+        maxChunkAmount:
+          p.account.policyType.payAsYouGo!.maxChunkAmount || new BN(0),
+        periodLength:
+          p.account.policyType.payAsYouGo!.periodLengthSeconds || new BN(0),
+        status: p.account.status.active ? "active" : "paused",
+        totalPaid: p.account.totalPaid,
+        createdAt: p.account.createdAt,
+      });
     }
   }
 
   return {
-    policies: subscriptionPolicies,
+    subscriptions: subscriptionPolicies,
+    payAsYouGo: payAsYouGoPolicies,
     userPaymentPubkey: userPayment?.pubkey || null,
   };
 }

@@ -14,12 +14,21 @@ Dead simple recurring allowances using Tributary. Parent wallet → child wallet
 
 **How it works:**
 
+**For Humans (Subscriptions):**
 1. Parent connects wallet
 2. Enters child's wallet address
 3. Sets amount and frequency (e.g., $50/week)
 4. Tributary creates a subscription policy
 5. Protocol auto-executes payments on schedule
 6. Done
+
+**For AI Agents (Pay-as-you-Go):**
+1. Human connects wallet
+2. Enters agent's wallet address
+3. Sets total budget and max per claim (e.g., $500 total, $50/claim, 30 days)
+4. Tributary creates a pay-as-you-go policy
+5. Agent claims funds on-demand when needed (up to max per claim)
+6. Budget depletes until period reset
 
 ---
 
@@ -41,11 +50,11 @@ Deployment: Vercel (static, no edge functions needed)
 ```
 ┌─────────────────────────────────────┐
 │      Next.js Frontend              │
-│  (Parent connects wallet)          │
-│  - Enter child wallet address      │
-│  - Set amount + frequency          │
-│  - Approve token delegation        │
-└──────────┬──────────────────────────┘
+│  (Parent/Agent connects wallet)     │
+│  - Enter child/agent wallet address   │
+│  - Set amount + frequency/budget     │
+│  - Approve token delegation          │
+└──────────┬───────────────────────────┘
            │ Tributary SDK
            │ (create PaymentPolicy)
            ▼
@@ -58,9 +67,9 @@ Deployment: Vercel (static, no edge functions needed)
 
 **Data flow:**
 
-1. Parent wallet signature approves delegation
-2. Tributary `PaymentPolicy` created on-chain
-3. Protocol executes payments automatically based on policy
+1. Parent/Agent wallet signature approves delegation
+2. Tributary `PaymentPolicy` (subscription or pay-as-you-go) created on-chain
+3. Protocol executes payments automatically (subscriptions) OR agent claims on-demand (pay-as-you-go)
 4. Frontend reads on-chain state to show current status
 
 **No server needed.** Everything is client-side SDK calls to Solana.
@@ -70,6 +79,8 @@ Deployment: Vercel (static, no edge functions needed)
 ## Core Features (MVP)
 
 ### Feature 1: Setup Allowance
+
+**Subscription Model (Kids):**
 
 ```typescript
 // What happens:
@@ -81,15 +92,26 @@ const policy = await tributary.createSubscriptionPolicy({
   autoRenew: true,
 });
 
-// User sees:
-("Allowance created! $50 will transfer to [child_address] every week.");
+**Pay-as-you-Go Model (AI Agents):**
+
+```typescript
+// What happens:
+const policy = await tributary.createPayAsYouGo({
+  userPayment: parentWallet.publicKey,
+  recipient: agentWallet.publicKey,
+  gateway: gatewayPubkey,
+  maxAmountPerPeriod: 500_000_000, // $500 total per period
+  maxChunkAmount: 50_000_000, // $50 max per claim
+  periodLengthSeconds: 30 * 24 * 60 * 60, // 30 days
+});
 ```
 
 **UI:**
-
-- Input: Child wallet address
+- Tab selection: Subscriptions (Kids) or Pay-as-you-Go (AI Agents)
+- Input: Child/Agent wallet address
 - Input: Amount (USDC)
-- Select: Frequency (weekly, bi-weekly, monthly)
+- Select: Frequency (weekly, bi-weekly, monthly) - for subscriptions
+- Input: Total budget, Max per claim, Period length - for pay-as-you-go
 - Button: "Create Allowance"
 - Success: Policy created, delegation approved
 
@@ -97,28 +119,50 @@ const policy = await tributary.createSubscriptionPolicy({
 
 ```typescript
 // What happens:
-const policies = await tributary.getUserPolicies(parentWallet.publicKey);
+const policies = await tributary.getUserPaymentPolicies(parentWallet.publicKey);
 
 // User sees:
 Table of active policies:
-- To: [child_address]
-- Amount: $50
-- Frequency: Weekly
-- Next payment: [date]
+- To: [child/agent_address]
+- Amount: $50 or $500 (total budget)
+- Frequency: Weekly OR Pay-as-you-Go
+- Next payment: [date] or Budget remaining: $455
 - Status: Active
 ```
 
 **UI:**
 
 - List all Tributary policies where user is `from`
-- Show next payment time (on-chain `next_payment_due`)
+- Show payment type (subscription vs pay-as-you-go)
+- Show next payment time OR remaining budget
 - Show total paid (from `total_amount_paid`)
 
-### Feature 3: Pause/Resume/Cancel
+### Feature 3: Agent Claims (Pay-as-you-Go only)
+
+```typescript
+// What happens (agent-initiated):
+const claim = await tributary.claimFunds({
+  paymentPolicy: policyId,
+  amount: amountToClaim, // Up to maxChunkAmount
+});
+
+// Agent sees:
+("Funds claimed. $10 transferred to wallet.");
+```
+
+**UI:**
+- Agent uses OpenClaw skill to check allowance
+- Shows: Total budget, Remaining, Max per claim, Period end
+- Agent triggers claims within bounds
+- No approval needed once policy is set
+
+### Feature 4: Pause/Resume/Cancel
 
 ```typescript
 // What happens:
 await tributary.pausePolicy(policyId);
+// or
+await tributary.resumePolicy(policyId);
 // or
 await tributary.cancelPolicy(policyId);
 
@@ -133,7 +177,23 @@ await tributary.cancelPolicy(policyId);
 
 ---
 
-## Simplified User Flow
+## Two Payment Models
+
+### Model 1: Subscriptions (Human-to-Human or Agent-to-Subscription)
+- Automatic recurring payments
+- Parent/Agent pays on schedule
+- Good for: Kids, Subscription-based AI services
+
+### Model 2: Pay-as-you-Go (Human-to-Agent)
+- Agent claims funds on-demand
+- Budget depletes as claims happen
+- Budget resets after period (e.g., monthly)
+- Bounded by max per claim (e.g., $50 at once)
+- Good for: Autonomous AI agents that need flexibility
+
+---
+
+## Simplified User Flows
 
 ### Parent Setup (One-time)
 
@@ -146,7 +206,25 @@ await tributary.cancelPolicy(policyId);
 7. Sign token delegation (one-time)
 8. Done
 
-That's it. No accounts, no sign-up, no database.
+### Human Setup - Pay-as-you-Go Model (One-time)
+
+1. Connect wallet (Phantom, Solflare)
+2. Click "Create Agent Allowance" (AI Agents tab)
+3. Enter agent's wallet address
+4. Set total budget ($50-$10,000)
+5. Set max per claim ($5-$500)
+6. Set period length (7/30/90 days)
+7. Click "Create & Approve"
+8. Sign token delegation (one-time)
+9. Done
+
+### Agent Usage (Ongoing - Pay-as-you-Go)
+
+1. Check allowance using OpenClaw skill
+2. See remaining budget and max per claim
+3. Trigger claim when needed (up to max per claim)
+4. Receive funds instantly
+5. Budget depletes until period reset
 
 ---
 
@@ -169,6 +247,23 @@ const policy = await tributary.createPaymentPolicy({
 });
 ```
 
+### Pay-as-you-Go Policy (Agent Budget)
+
+```typescript
+const policy = await tributary.createPayAsYouGo({
+  userPayment: parentWallet.publicKey,
+  recipient: agentWallet.publicKey,
+  gateway: gatewayPubkey,
+  policyType: {
+    payAsYouGo: {
+      maxAmountPerPeriod: 500_000_000, // $500 total per period
+      maxChunkAmount: 50_000_000, // $50 max per claim
+      periodLengthSeconds: 30 * 24 * 60 * 60, // 30 days
+    },
+  },
+});
+```
+
 ### Pause/Resume
 
 ```typescript
@@ -180,6 +275,49 @@ await tributary.resumePolicy(policyId);
 
 ```typescript
 await tributary.cancelPolicy(policyId);
+```
+
+---
+
+## OpenClaw Integration
+
+### Allowly Agent Skill
+
+Located in `/home/clawdbot/clawd/skills/allowly-agent/`
+
+**What it provides:**
+- Check allowance status (budget, remaining, max per claim)
+- View pay-as-you-go policy details
+- View claim history
+- Decide when to claim funds
+
+**Functions:**
+
+```typescript
+// Check allowance
+const status = await checkAllowance(agentWallet);
+// Returns: { totalBudget, totalPaid, remaining, maxPerClaim, periodDays, periodEnd, policies }
+
+// View policy details
+const policy = await viewPolicy(agentWallet, policyId);
+// Returns: { id, totalBudget, maxPerClaim, periodDays, remaining, periodEnd, status }
+
+// View claim history
+const history = await claimHistory(agentWallet, policyId);
+// Returns: [{ timestamp, amount, txSignature, memo }, ...]
+```
+
+**Usage in Agent:**
+
+```typescript
+// Example: Agent decides whether to use paid API
+const allowance = await checkAllowance(agentWallet);
+
+if (allowance.remaining >= task.cost && task.cost <= allowance.maxPerClaim) {
+  await executeTask(task);
+} else {
+  await notifyHuman("Insufficient allowance");
+}
 ```
 
 ---
@@ -220,24 +358,26 @@ Find a community Tributary gateway that executes payments for small flat fee.
 ## File Structure
 
 ```
-apps/pocket-money/
+packages/app/
 ├── app/
-│   ├── layout.tsx          # Root layout (wallet provider)
-│   ├── page.tsx            # Landing / setup
-│   ├── policies/
-│   │   └── page.tsx        # View/manage policies
-│   └── api/                # (None needed - all client-side)
+│   ├── page.tsx              # Landing (redirects to /human)
+│   ├── human/
+│   │   └── page.tsx         # Subscription model for kids
+│   └── agent/
+│       └── page.tsx         # Pay-as-you-go model for AI agents
 ├── components/
-│   ├── WalletButton.tsx    # Connect wallet
-│   ├── CreatePolicyForm.tsx # Setup allowance
-│   ├── PolicyList.tsx     # Show active policies
-│   └── PolicyCard.tsx     # Single policy display
+│   ├── WalletButton.tsx      # Connect wallet
+│   ├── AppForm.tsx           # Legacy form (deprecated)
+│   ├── AgentPolicyForm.tsx   # Pay-as-you-go form for agents
+│   ├── Hero.tsx              # Landing hero
+│   ├── HowItWorks.tsx        # Steps explanation
+│   └── Features.tsx           # Feature highlights
 ├── lib/
-│   ├── tributary.ts       # Tributary SDK wrapper
-│   └── config.ts          # Gateway addresses, USDC mint
+│   ├── tributary.ts         # Tributary SDK wrapper
+│   └── constants.ts          # Gateway addresses, USDC mint
 └── hooks/
-    ├── useTributary.ts    # Custom hook for policies
-    └── useWallet.ts       # Wallet connection
+    ├── useTributary.ts      # Custom hook for policies
+    └── useWallet.ts         # Wallet connection
 ```
 
 ---
@@ -266,25 +406,33 @@ return (
 
 ---
 
-## What We're NOT Building (Deliberately)
+## Routes
 
-**No transaction history:** Too complex for play project. View Solana Explorer directly.
+- `/` → Landing (redirects to /human)
+- `/human` → Subscription allowances for kids
+- `/agent` → Pay-as-you-go allowances for AI agents
 
-**No spending limits:** Subscription model only. Pay-as-you-go requires more complex policy types.
+---
 
-**No approval workflow:** Keep it simple - allowance = auto-transfer. Parents can pause/cancel if needed.
+## What We're Building vs Not Building
 
-**No notifications:** Check the app to see status. No emails, no push.
+**We're building:**
+- ✅ Subscription allowances with automatic recurring payments
+- ✅ Pay-as-you-go allowances with on-demand claims by agents
+- ✅ Pause/resume/cancel functionality
+- ✅ View active policies and status
+- ✅ Agent skill to check and claim allowances
+- ✅ Two separate UX flows for different use cases
 
-**No analytics:** No charts, no trends. Just raw policy data.
-
-**No multi-child dashboard:** One policy = one view. Create multiple policies if needed.
-
-**No chores/savings:** Just basic allowance. Expand later if fun.
-
-**No merchant categories:** Payments go to child's wallet. They spend how they want.
-
-**No premium tiers:** Free tool. Flat fee on protocol side.
+**We're NOT building (for now):**
+- ❌ Complex transaction history (check Solana Explorer)
+- ❌ Spending limits beyond per-claim caps
+- ❌ Approval workflows for each claim
+- ❌ Notification system
+- ❌ Analytics/charts
+- ❌ Multi-child/agent dashboard
+- ❌ Chores/savings features
+- ❌ Dark mode
 
 ---
 
@@ -303,7 +451,7 @@ pnpm install @solana/wallet-adapter-react
 ### Minimal Setup
 
 ```typescript
-// apps/pocket-money/lib/config.ts
+// packages/app/lib/config.ts
 export const CONFIG = {
   programId: "TRibg8W8zmPHQqWtyAD1rEBRXEdyU13Mu6qX1Sg42tJ",
   usdcMint: new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), // USDC mint
@@ -313,7 +461,7 @@ export const CONFIG = {
 ```
 
 ```typescript
-// apps/pocket-money/lib/tributary.ts
+// packages/app/lib/tributary.ts
 import { Tributary } from "@tributary-so/sdk";
 import { CONFIG } from "./config";
 
@@ -322,20 +470,48 @@ export const tributary = new Tributary({
   network: CONFIG.network,
 });
 
-export async function createAllowance(
+// Subscription
+export async function createSubscription(
   from: PublicKey,
   to: PublicKey,
   amount: number, // USDC (human readable, e.g., 50)
   frequency: "weekly" | "bi-weekly" | "monthly",
 ) {
-  const amountSmallestUnit = amount * 1_000_000; // USDC has 6 decimals
+  const policy = await tributary.createPaymentPolicy({
+    userPayment: from,
+    recipient: to,
+    gateway: gatewayPubkey,
+    policyType: {
+      subscription: {
+        amount: amount * 1_000_000,
+        frequency: mapFrequency(frequency),
+        auto_renew: true,
+      },
+    },
+  });
 
-  const policy = await tributary.createSubscriptionPolicy({
-    from,
-    to,
-    amount: amountSmallestUnit,
-    frequency: mapFrequency(frequency),
-    autoRenew: true,
+  return policy;
+}
+
+// Pay-as-you-go
+export async function createPayAsYouGo(
+  from: PublicKey,
+  to: PublicKey,
+  totalBudget: number,
+  maxPerClaim: number,
+  periodDays: number,
+) {
+  const policy = await tributary.createPayAsYouGo({
+    userPayment: from,
+    recipient: to,
+    gateway: gatewayPubkey,
+    policyType: {
+      payAsYouGo: {
+        maxAmountPerPeriod: totalBudget * 1_000_000,
+        maxChunkAmount: maxPerClaim * 1_000_000,
+        periodLengthSeconds: periodDays * 24 * 60 * 60,
+      },
+    },
   });
 
   return policy;
@@ -364,8 +540,10 @@ vercel --prod
 2. **Transaction history:** Pull from Helius API, show simple list
 3. **Savings goals:** Child can "lock" portion of allowance
 4. **Chore tracking:** Manual task list, parents trigger extra payments
-5. **Multi-child view:** Dashboard showing all children's policies
+5. **Multi-child/agent view:** Dashboard showing all policies
 6. **Dark mode:** Tailwind supports it out of the box
+7. **Agent claim gateway:** Web service for agent-initiated claims
+8. **Policy analytics:** Track agent spending patterns
 
 ---
 
@@ -373,32 +551,34 @@ vercel --prod
 
 **Functional:**
 
-- Can create allowance policy
-- Can view active policies
-- Can pause/resume/cancel
-- Payments execute on schedule
+- ✅ Can create subscription policy (human-to-human)
+- ✅ Can create pay-as-you-go policy (human-to-agent)
+- ✅ Can view active policies
+- ✅ Can pause/resume/cancel
+- ✅ Payments execute on schedule (subscriptions)
+- ✅ Agent can claim funds on-demand (pay-as-you-go)
+- ✅ OpenClaw skill to check allowances
 
 **Simple:**
 
-- <10 files in codebase
-- No backend/database
-- Deployed in <1 hour
-- Onboard new parent in <2 minutes
+- ✅ <10 files in core codebase
+- ✅ No backend/database
+- ✅ Deployed in <1 hour
+- ✅ Onboard new parent/agent in <2 minutes
 
 **Fun:**
 
-- You actually use it with your kids
-- They learn about blockchain payments
-- You understand Tributary better
+- ✅ You actually use it with your kids
+- ✅ They learn about blockchain payments
+- ✅ You understand Tributary better
+- ✅ Your AI agent can manage its own budget
 
 ---
 
 ## Resources
 
-- Tributary SDK: `sdk/` in monorepo
-- Tributary docs: `docs/` in monorepo
-- Solana wallet adapter docs: <https://solanacookbook.com>
+- Tributary SDK: `@tributary-so/sdk`
+- Tributary docs: https://tributary.so
+- Solana wallet adapter docs: https://solanacookbook.com
+- OpenClaw: https://openclaw.ai
 
----
-
-**End.**
