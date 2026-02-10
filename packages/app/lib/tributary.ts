@@ -52,9 +52,9 @@ export interface CreateSubscriptionParams {
 export interface CreatePayAsYouGoParams {
   humanWallet: WalletContextState;
   agentWallet: PublicKey;
-  maxBudget: number;         // Max USDC per period (e.g., €500)
-  maxPerClaim: number;       // Max per single claim (e.g., €50)
-  periodDays: number;        // Period length in days (e.g., 30 days)
+  maxBudget: number; // Max USDC per period (e.g., €500)
+  maxPerClaim: number; // Max per single claim (e.g., €50)
+  periodDays: number; // Period length in days (e.g., 30 days)
 }
 
 export interface PolicyListResult {
@@ -228,7 +228,8 @@ export async function createAllowance(
 export async function createPayAsYouGo(
   params: CreatePayAsYouGoParams,
 ): Promise<PayAsYouGoPolicy> {
-  const { humanWallet, agentWallet, maxBudget, maxPerClaim, periodDays } = params;
+  const { humanWallet, agentWallet, maxBudget, maxPerClaim, periodDays } =
+    params;
   const tributary = getTributary(humanWallet);
 
   const maxAmountPerPeriod = usdToBN(maxBudget);

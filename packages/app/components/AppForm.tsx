@@ -8,6 +8,7 @@ import { CreatePolicyForm } from "@/components/CreatePolicyForm";
 import { PolicyList } from "@/components/PolicyList";
 import { PolicyRefreshProvider } from "@/components/PolicyRefreshContext";
 import { fadeInUp } from "@/lib/animations";
+import { AgentPolicyForm } from "./AgentPolicyForm";
 
 type AppFormMode = "human" | "agent";
 
@@ -32,7 +33,9 @@ export default function AppForm({ mode = "human" }: { mode?: AppFormMode }) {
             viewport={{ once: true }}
             transition={{ delay: 0.1, duration: 0.6 }}
           >
-            {isHuman ? "Configure Your Subscription" : "Configure Agent Allowance"}
+            {isHuman
+              ? "Configure Your Subscription"
+              : "Configure Agent Allowance"}
           </motion.h2>
           <motion.p
             className="text-xl text-muted max-w-2xl mx-auto leading-relaxed"
@@ -52,7 +55,6 @@ export default function AppForm({ mode = "human" }: { mode?: AppFormMode }) {
                 autonomously claims funds on-demand within budget limits.
               </>
             )}
-          </motion.p>
             Create automated allowance policies for your family members. Set
             amounts, frequencies, and let the blockchain handle the rest.
           </motion.p>
@@ -76,7 +78,7 @@ export default function AppForm({ mode = "human" }: { mode?: AppFormMode }) {
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2 }}
                   >
-                    <CreatePolicyForm />
+                    {isHuman ? <CreatePolicyForm /> : <AgentPolicyForm />}
                     <div className="h-px bg-accent/20 my-4" />
                     <PolicyList />
                   </motion.div>

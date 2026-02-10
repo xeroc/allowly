@@ -10,7 +10,8 @@ export function PolicyList() {
   const { connected, publicKey } = wallet;
   const { refreshKey } = usePolicyRefresh();
   const [policies, setPolicies] = useState<PolicyListResult>({
-    policies: [],
+    subscriptions: [],
+    payAsYouGo: [],
     userPaymentPubkey: null,
   });
   const [loading, setLoading] = useState(true);
@@ -18,7 +19,11 @@ export function PolicyList() {
   useEffect(() => {
     async function fetch() {
       if (!connected || !publicKey) {
-        setPolicies({ policies: [], userPaymentPubkey: null });
+        setPolicies({
+          subscriptions: [],
+          payAsYouGo: [],
+          userPaymentPubkey: null,
+        });
         setLoading(false);
         return;
       }
@@ -31,11 +36,12 @@ export function PolicyList() {
 
   if (!connected) return null;
   if (loading) return <div>Loading policies...</div>;
-  if (policies.policies.length === 0) return <div>No active allowances</div>;
+  if (policies.subscriptions.length === 0)
+    return <div>No active allowances</div>;
 
   return (
     <div>
-      {policies.policies.map((policy) => (
+      {policies.subscriptions.map((policy) => (
         <PolicyCard key={policy.id} policy={policy} />
       ))}
     </div>

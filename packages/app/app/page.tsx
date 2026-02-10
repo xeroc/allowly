@@ -1,6 +1,7 @@
 "use client";
 import { motion } from "framer-motion";
 import { fadeInUp, fadeInUpStagger } from "@/lib/animations";
+import Footer from "@/components/Footer";
 
 export default function Home() {
   return (
@@ -43,7 +44,7 @@ export default function Home() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
               </span>
-              Choose your mode
+              Choose your side
             </span>
           </motion.div>
 
@@ -100,8 +101,8 @@ export default function Home() {
                 </h2>
 
                 <p className="mb-4 text-muted">
-                  Recurring allowances for family, partners, anyone you care about.
-                  Payments execute automatically on schedule.
+                  Recurring allowances for family, partners, anyone you care
+                  about. Payments execute automatically on schedule.
                 </p>
 
                 <div className="flex items-center gap-2 text-accent font-medium group-hover:gap-3 transition-all">
@@ -155,8 +156,8 @@ export default function Home() {
                 </h2>
 
                 <p className="mb-4 text-muted">
-                  Autonomous allowances for AI agents. Set policies, agents claim
-                  funds within limits.
+                  Autonomous allowances for AI agents. Set policies, agents
+                  claim funds within limits.
                 </p>
 
                 <div className="flex items-center gap-2 text-accent font-medium group-hover:gap-3 transition-all">
