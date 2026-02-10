@@ -7,11 +7,7 @@ import Footer from "@/components/Footer";
 import AppForm from "@/components/AppForm";
 import { useState } from "react";
 
-export default function AgentPage() {
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = async () => {
-    const skillCode = `# Allowly Agent - Autonomous Pay-As-You-Go Allowances
+const skillCode = `# Allowly Agent - Autonomous Pay-As-You-Go Allowances
 
 **Self-contained OpenClow skill for AI agents to check and manage USDC allowance budgets on Solana.**
 
@@ -35,9 +31,9 @@ You need to:
 // Check your allowance status
 const status = await checkAllowance();
 
-console.log(\`💰 Total Budget: \$${status.totalBudget}\`);
-console.log(\`✅ Remaining: \$${status.remaining}\`);
-console.log(\`⚡ Max per claim: \$${status.maxPerClaim}\`);
+console.log(\`💰 Total Budget: \${status.totalBudget}\`);
+console.log(\`✅ Remaining: \${status.remaining}\`);
+console.log(\`⚡ Max per claim: \${status.maxPerClaim}\`);
 \`\`\`
 
 ---
@@ -182,11 +178,11 @@ const task = {
 const allowance = await checkAllowance(agentWallet);
 
 if (allowance.remaining >= task.cost && task.cost <= allowance.maxPerClaim) {
-  console.log(\`✅ Sufficient allowance: \$${allowance.remaining}\`);
-  console.log(\`✅ Within per-claim limit: max \$${allowance.maxPerClaim}\`);
+  console.log(\`✅ Sufficient allowance: \${allowance.remaining}\`);
+  console.log(\`✅ Within per-claim limit: max \${allowance.maxPerClaim}\`);
   await executeTask(task);
 } else {
-  console.log(\`❌ Insufficient allowance. Have \$${allowance.remaining}, need \$${task.cost}\`);
+  console.log(\`❌ Insufficient allowance. Have \${allowance.remaining}, need \${task.cost}\`);
 }
 \`\`\`
 
@@ -204,7 +200,7 @@ const totalCost = tasks.reduce((sum, t) => sum + t.cost, 0);
 
 // Batch claim if within limits
 if (totalCost <= allowance.maxPerClaim && totalCost <= allowance.remaining) {
-  console.log(\`✅ Batch claim: \$${totalCost}\`);
+  console.log(\`✅ Batch claim: \${totalCost}\`);
   await executeAllTasks(tasks);
 }
 \`\`\`
@@ -212,15 +208,23 @@ if (totalCost <= allowance.maxPerClaim && totalCost <= allowance.remaining) {
 ---
 
 ## Built for Allowly Agent - Autonomous Pay-As-You-Go Allowances
-**License:** ISC
 `;
 
+export default function AgentPage() {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(skillCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const handleDownload = () => {
-    const blob = new Blob([skillCode], { type: 'text/markdown' });
+    const blob = new Blob([skillCode], { type: "text/markdown" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'allowly-agent-skill.md';
+    a.download = "allowly-agent-skill.md";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -241,9 +245,9 @@ if (totalCost <= allowance.maxPerClaim && totalCost <= allowance.remaining) {
             <span className="text-4xl">🤖</span>
             Download Agent Skill
           </h2>
-          
+
           <p className="text-gray-300 mb-6">
-            Copy this self-contained OpenClow skill file to give your AI agent 
+            Copy this self-contained OpenClow skill file to give your AI agent
             the ability to check allowance and manage budgets autonomously.
           </p>
 
@@ -267,57 +271,70 @@ if (totalCost <= allowance.maxPerClaim && totalCost <= allowance.remaining) {
             </pre>
 
             <button
-              onClick={async () => {
-                await navigator.clipboard.writeText(skillCode);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
-              }}
+              onClick={handleCopy}
               className={`w-full px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                 copied
-                  ? 'bg-green-600 hover:bg-green-700 text-white'
-                  : 'bg-white/10 hover:bg-white/20 text-white'
+                  ? "bg-green-600 hover:bg-green-700 text-white"
+                  : "bg-white/10 hover:bg-white/20 text-white"
               }`}
             >
-              {copied ? '✅ Copied to clipboard!' : 'Copy skill to clipboard'}
+              {copied ? "✅ Copied to clipboard!" : "Copy skill to clipboard"}
             </button>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-accent/10 rounded-lg p-4 border border-accent/20">
-              <h3 className="text-lg font-semibold text-white mb-2">✅ Self-Contained</h3>
+              <h3 className="text-lg font-semibold text-white mb-2">
+                ✅ Self-Contained
+              </h3>
               <p className="text-sm text-gray-300">
-                No external dependencies or imports. Everything you need is in this one file.
-              </p>
-            </div>
-            
-            <div className="bg-accent/10 rounded-lg p-4 border border-accent/20">
-              <h3 className="text-lg font-semibold text-white mb-2">🤖 Agent-Ready</h3>
-              <p className="text-sm text-gray-300">
-                OpenClow-compatible skill designed for AI agents to check allowances autonomously.
+                No external dependencies or imports. Everything you need is in
+                this one file.
               </p>
             </div>
 
             <div className="bg-accent/10 rounded-lg p-4 border border-accent/20">
-              <h3 className="text-lg font-semibold text-white mb-2">📊 Budget Tracking</h3>
+              <h3 className="text-lg font-semibold text-white mb-2">
+                🤖 Agent-Ready
+              </h3>
               <p className="text-sm text-gray-300">
-                Functions to check remaining budget, max per claim, and period end date.
+                OpenClow-compatible skill designed for AI agents to check
+                allowances autonomously.
               </p>
             </div>
 
             <div className="bg-accent/10 rounded-lg p-4 border border-accent/20">
-              <h3 className="text-lg font-semibold text-white mb-2">🔄 On-Demand Claims</h3>
+              <h3 className="text-lg font-semibold text-white mb-2">
+                📊 Budget Tracking
+              </h3>
               <p className="text-sm text-gray-300">
-                Agents claim funds when needed, respecting human-set budget limits.
+                Functions to check remaining budget, max per claim, and period
+                end date.
+              </p>
+            </div>
+
+            <div className="bg-accent/10 rounded-lg p-4 border border-accent/20">
+              <h3 className="text-lg font-semibold text-white mb-2">
+                🔄 On-Demand Claims
+              </h3>
+              <p className="text-sm text-gray-300">
+                Agents claim funds when needed, respecting human-set budget
+                limits.
               </p>
             </div>
           </div>
 
           <div className="mt-6 pt-6 border-t border-white/10">
             <p className="text-sm text-gray-400 mb-2">
-              <strong>Installation:</strong> Save file as <code className="bg-white/10 px-1.5 py-0.5 rounded text-white font-mono">SKILL.md</code> in your OpenClow skills directory.
+              <strong>Installation:</strong> Save file as{" "}
+              <code className="bg-white/10 px-1.5 py-0.5 rounded text-white font-mono">
+                SKILL.md
+              </code>{" "}
+              in your OpenClow skills directory.
             </p>
             <p className="text-sm text-gray-400">
-              <strong>Documentation:</strong> Full usage guide included in the skill file.
+              <strong>Documentation:</strong> Full usage guide included in the
+              skill file.
             </p>
           </div>
         </div>

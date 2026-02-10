@@ -5,6 +5,7 @@ import { SolanaWalletProvider } from "@/components/WalletProvider";
 import Script from "next/script";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://allowly.app"),
   title: {
     default: "Allowly - Pocket Money the Web3 Way",
     template: "%s | Allowly",
