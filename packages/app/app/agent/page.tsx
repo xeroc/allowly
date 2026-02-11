@@ -6,16 +6,21 @@ import HowItWorks from "@/components/HowItWorks";
 import Footer from "@/components/Footer";
 import AppForm from "@/components/AppForm";
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 const skillCode = `# Allowly Agent - Autonomous Pay-As-You-Go Allowances
 
-**Self-contained OpenClow skill for AI agents to check and manage USDC allowance budgets on Solana.**
+**Self-contained Skill for AI agents to check and manage Allowance budgets on Solana.**
 
 ---
 
 ## Overview
 
-Check allowance availability, view pay-as-you-go policy details, and execute payment claims. Humans set up bounded allowance budgets, and you can check your available balance, view policy limits, monitor claim history, and execute claims autonomously.
+Check allowance availability, view pay-as-you-go policy details, and execute payment claims. Humans
+set up bounded allowance budgets, and you can check your available balance, view policy limits,
+monitor claim history, and execute claims autonomously.
 
 ## Use When
 
@@ -35,6 +40,8 @@ const status = await checkAllowance();
 console.log(\`💰 Total Budget: \${status.totalBudget}\`);
 console.log(\`✅ Remaining: \${status.remaining}\`);
 console.log(\`⚡ Max per claim: \${status.maxPerClaim}\`);
+console.log(\`⏱️ Period: \${status.periodDays} days\`);
+console.log(\`🔄 Period resets: \${status.periodEnd}\`);
 \`\`\`
 
 ---
@@ -58,41 +65,82 @@ async function checkAllowance(agentWallet) {
     throw new Error("Invalid agent wallet address");
   }
 
+  // Import Tributary SDK
+  const { Tributary } = await import("@tributary-so/sdk");
+  const { Connection, PublicKey, Wallet } = await import("@solana/web3.js");
+  const BN = await import("bn.js");
+
   // Initialize connection
   const connection = new Connection("https://api.mainnet-beta.solana.com", {
     commitment: "confirmed",
   });
 
   try {
-    // PRODUCTION IMPLEMENTATION:
-    // Fetch from blockchain using Tributary SDK
-    // 1. Fetch UserPayment account where recipient = agentWallet
-    // 2. Fetch PaymentPolicy accounts for that UserPayment
-    // 3. Identify pay-as-you-go policies (not subscriptions)
-    // 4. Aggregate totals and calculate remaining
-    // 5. Extract maxPerClaim and periodDays from policy
+    // 1. Fetch all payment policies where agent is recipient
+    const tributary = new Tributary(connection, new Wallet(agentWallet));
 
-    // MVP IMPLEMENTATION:
-    // Return mock data structure matching production
+    const policies = await tributary.getPaymentPoliciesByRecipient(
+      new PublicKey(agentWallet)
+    );
+
+    // 2. Filter for active pay-as-you-go policies
+    const paygPolicies = policies
+      .filter(({ account: policy }) => {
+        return (
+          policy.status.active !== undefined && // Check if active
+          "payAsYouGo" in policy.policyType
+        );
+      })
+      .map(({ publicKey: policyPda, account: policy }) => {
+        const payg = policy.policyType.payAsYouGo;
+        
+        // Convert from smallest units to human-readable (e.g., USDC has 6 decimals)
+        const decimals = 6; // USDC standard
+        const maxAmountPerPeriod = Number(payg.maxAmountPerPeriod) / 10 ** decimals;
+        const maxChunkAmount = Number(payg.maxChunkAmount) / 10 ** decimals;
+        const periodTotal = Number(payg.currentPeriodTotal) / 10 ** decimals;
+        
+        // Calculate period end time
+        const currentPeriodStart = Number(payg.currentPeriodStart) * 1000; // Unix to ms
+        const periodLengthMs = Number(payg.periodLengthSeconds) * 1000;
+        const periodEnd = new Date(currentPeriodStart + periodLengthMs);
+        
+        // Calculate remaining in period
+        const remaining = Math.max(0, maxAmountPerPeriod - periodTotal);
+        
+        // Check if period has expired
+        const now = Date.now();
+        const isPeriodActive = now >= currentPeriodStart && now < currentPeriodStart + periodLengthMs;
+
+        return {
+          id: policyPda.toString(),
+          totalBudget: maxAmountPerPeriod,
+          maxPerClaim: maxChunkAmount,
+          periodSeconds: Number(payg.periodLengthSeconds),
+          periodStart: new Date(currentPeriodStart).toISOString(),
+          periodEnd: periodEnd.toISOString(),
+          currentPeriodTotal: periodTotal,
+          remaining: isPeriodActive ? remaining : maxAmountPerPeriod,
+          status: policy.status.active !== undefined ? "active" : "paused",
+        };
+      });
+
+    // 3. Aggregate totals across all pay-as-you-go policies
+    const totalBudget = paygPolicies.reduce((sum, p) => sum + p.totalBudget, 0);
+    const totalPaid = paygPolicies.reduce((sum, p) => sum + p.currentPeriodTotal, 0);
+    const remaining = paygPolicies.reduce((sum, p) => sum + p.remaining, 0);
+    const maxPerClaim = Math.max(...paygPolicies.map(p => p.maxPerClaim));
+    const periodSeconds = Math.max(...paygPolicies.map(p => p.periodSeconds));
 
     return {
-      totalBudget: 500,
-      totalPaid: 45,
-      remaining: 455,
-      maxPerClaim: 50,
-      periodDays: 30,
-      periodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      policies: [
-        {
-          id: 1,
-          totalBudget: 500,
-          maxPerClaim: 50,
-          periodDays: 30,
-          remaining: 455,
-          periodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          status: "active",
-        },
-      ],
+      totalBudget,
+      totalPaid,
+      remaining,
+      maxPerClaim,
+      periodSeconds,
+      periodDays: Math.round(periodSeconds / 86400), // Convert to days
+      periodEnd: paygPolicies.length > 0 ? paygPolicies[0].periodEnd : null,
+      policies: paygPolicies,
     };
 
   } catch (error) {
@@ -100,76 +148,11 @@ async function checkAllowance(agentWallet) {
     throw new Error(\`Failed to check allowance: \${error.message}\`);
   }
 }
-\`\`\`
 
-**Returns:**
-\`\`\`javascript
-{
-  totalBudget: 500,      // Total USDC budget for current period
-  totalPaid: 45,          // USDC already claimed in current period
-  remaining: 455,          // USDC available to claim
-  maxPerClaim: 50,        // Maximum USDC per single claim
-  periodDays: 30,         // Period length in days
-  periodEnd: "2026-03-12", // Date when budget resets
-  policies: [...]          // Array of policy details
-}
-\`\`\`
-
-### viewPolicy(agentWallet, policyId)
-
-View details of a specific pay-as-you-go policy.
-
-\`\`\`javascript
-async function viewPolicy(agentWallet, policyId) {
-  const connection = new Connection("https://api.mainnet-beta.solana.com");
-
-  // PRODUCTION: Fetch from blockchain
-  // MVP: Return mock data
-
-  return {
-    id: policyId,
-    totalBudget: 500,
-    maxPerClaim: 50,
-    periodDays: 30,
-    remaining: 455,
-    periodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-    status: "active",
-  };
-}
-\`\`\`
-
-### claimHistory(agentWallet, policyId)
-
-View claim/payment history for a policy.
-
-\`\`\`javascript
-async function claimHistory(agentWallet, policyId) {
-  const connection = new Connection("https://api.mainnet-beta.solana.com");
-
-  // PRODUCTION: Fetch payment transactions from blockchain
-  // Use Solana Explorer API or indexer (e.g., Helius)
-  // MVP: Return mock data
-
-  return [
-    {
-      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-      amount: 10,
-      txSignature: "3x..." + policyId,
-      memo: "API call: OpenAI",
-    },
-  ];
-}
-\`\`\`
-
-### executeClaim(agentWallet, policyPda, claimAmount, recipient, tokenMint, gateway)
-
-Execute a payment claim against a pay-as-you-go policy using Tributary SDK.
-
-\`\`\`javascript
 /**
  * Execute a payment claim against a pay-as-you-go policy
  *
- * @param {string} agentWallet - Agent's wallet private key array [num, num, ...]
+ * @param {string} agentWallet - Agent's wallet private key array of numbers
  * @param {PublicKey} policyPda - Payment policy PDA address (base58 string or PublicKey)
  * @param {number|BN} claimAmount - Amount to claim in smallest token units (e.g., 10000000 for 10 USDC)
  * @param {string} recipient - Recipient public key (base58 string)
@@ -218,12 +201,6 @@ async function executeClaim(agentWallet, policyPda, claimAmount, recipient, toke
 
   try {
     // Execute payment using Tributary SDK
-    // This builds the transaction instructions for:
-    // 1. Create recipient ATA if needed
-    // 2. Create gateway fee ATA if needed
-    // 3. Transfer tokens from user to recipient
-    // 4. Pay protocol fees
-    // 5. Pay gateway fees
     const instructions = await tributary.executePayment(
       policyPdaPubkey,
       amountBN,
@@ -278,12 +255,12 @@ async function executeClaim(agentWallet, policyPda, claimAmount, recipient, toke
 \`\`\`
 
 **Parameters:**
-- `agentWallet`: Agent's wallet private key as array `[num, num, num, ...]`
-- `policyPda`: Payment policy PDA address (base58 string or PublicKey object)
-- `claimAmount`: Amount to claim in smallest token units (e.g., 10000000 for 10 USDC)
-- `recipient`: Recipient public key (base58 string)
-- `tokenMint`: Token mint address (base58 string)
-- `gateway`: Gateway public key (base58 string)
+- \`agentWallet\`: Agent's wallet private key as array of numbers
+- \`policyPda\`: Payment policy PDA address (base58 string or PublicKey object)
+- \`claimAmount\`: Amount to claim in smallest token units (e.g., 10000000 for 10 USDC)
+- \`recipient\`: Recipient public key (base58 string)
+- \`tokenMint\`: Token mint address (base58 string)
+- \`gateway\`: Gateway public key (base58 string)
 
 **Returns:**
 - Transaction signature (base58 string)
@@ -292,12 +269,13 @@ async function executeClaim(agentWallet, policyPda, claimAmount, recipient, toke
 \`\`\`javascript
 // Execute a claim
 const signature = await executeClaim(
-  [1,2,3,...,64],  // agent wallet private key array
-  "9WzDXw...",         // policy PDA address
-  10000000,             // 10 USDC (6 decimals)
-  "EPjFWdd5...",        // USDC mint
-  "CwNybLVQ..."         // gateway public key
-);
+  [1, 2, 3, ..., 64],                              // agent wallet private key array
+  policy.id,                                       // policy PDA address
+  claimAmount * 1000000,                           // convert to smallest units (6 decimals)
+  "RECIPIENT_PUBLIC_KEY_HERE",                     // where to send funds
+  "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",  // USDC mint
+  "CwNybLVQ3sVmcZ3Q1veS6x99gUZcAF2duNDe3qbcEMGr"   // gateway
+  );
 
 console.log(\`Claim signature: \${signature}\`);
 \`\`\`
@@ -322,6 +300,7 @@ const allowance = await checkAllowance(agentWallet);
 if (allowance.remaining >= task.cost && task.cost <= allowance.maxPerClaim) {
   console.log(\`✅ Sufficient allowance: \${allowance.remaining}\`);
   console.log(\`✅ Within per-claim limit: max \${allowance.maxPerClaim}\`);
+  console.log(\`⏱️ Period resets in: \${allowance.periodEnd}\`);
   await executeTask(task);
 } else {
   console.log(\`❌ Insufficient allowance. Have \${allowance.remaining}, need \${task.cost}\`);
@@ -340,10 +319,15 @@ const tasks = [
 const allowance = await checkAllowance(agentWallet);
 const totalCost = tasks.reduce((sum, t) => sum + t.cost, 0);
 
-// Batch claim if within limits
+// Batch claim if within per-claim and total remaining limits
 if (totalCost <= allowance.maxPerClaim && totalCost <= allowance.remaining) {
-  console.log(\`✅ Batch claim: \${totalCost}\`);
+  console.log(\`✅ Batch claim: \${totalCost} USDC\`);
+  console.log(\`⏱️ Period: \${allowance.periodDays} days\`);
   await executeAllTasks(tasks);
+} else {
+  console.log(\`❌ Batch exceeds limits\`);
+  console.log(\`💰 Per-claim max: \${allowance.maxPerClaim}\`);
+  console.log(\`💰 Total remaining: \${allowance.remaining}\`);
 }
 \`\`\`
 
@@ -355,29 +339,31 @@ const allowance = await checkAllowance(agentWallet);
 const claimAmount = 10;  // 10 USDC
 
 if (allowance.remaining >= claimAmount && claimAmount <= allowance.maxPerClaim) {
-  // Get policy details from allowance response
-  const policy = allowance.policies[0];
+  // Get policy details from allowance response (use first active policy)
+  const policy = allowance.policies.find(p => p.status === "active");
+  
+  if (!policy) {
+    throw new Error("No active pay-as-you-go policy found");
+  }
 
-  // Execute the claim
+  // Execute a claim
   const signature = await executeClaim(
-    [1,2,3,...,64],           // agent wallet private key array
-    policy.id,                       // policy PDA address
-    claimAmount * 1000000,           // convert to smallest units (6 decimals)
-    "RECIPIENT_PUBLIC_KEY_HERE",    // where to send funds
+    [1,2,3,...,64],                                  // agent wallet private key array
+    policy.id,                                       // policy PDA address
+    claimAmount * 1000000,                           // convert to smallest units (6 decimals)
+    "RECIPIENT_PUBLIC_KEY_HERE",                     // where to send funds
     "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",  // USDC mint
-    "CwNybLVQ3sVmcZ3Q1veS6x99gUZcAF2duNDe3qbcEMGr"  // gateway
-  );
+    "CwNybLVQ3sVmcZ3Q1veS6x99gUZcAF2duNDe3qbcEMGr"   // gateway
+    );
 
   console.log(\`✅ Claim successful: \${signature}\`);
   console.log(\`💰 Amount: \${claimAmount} USDC\`);
+  console.log(\`🔄 Remaining budget: \${allowance.remaining - claimAmount} USDC\`);
 } else {
   console.log(\`❌ Insufficient allowance for \${claimAmount} USDC\`);
+  console.log(\`💰 Have: \${allowance.remaining}, Need: \${claimAmount}\`);
 }
 \`\`\`
-
----
-
-## Built for Allowly Agent - Autonomous Pay-As-You-Go Allowances
 `;
 
 export default function AgentPage() {
@@ -399,6 +385,43 @@ export default function AgentPage() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const PreBlock = ({ children }: { children: React.ReactNode }) => (
+    <pre className="!mt-0 !mb-0 !bg-transparent !p-0">{children}</pre>
+  );
+
+  const CodeBlock = ({
+    node,
+    inline,
+    className,
+    children,
+    ...props
+  }: {
+    node?: any;
+    inline?: boolean;
+    className?: string;
+    children?: React.ReactNode;
+  }) => {
+    const match = /language-(\w+)/.exec(className || "");
+    return !inline && match ? (
+      <SyntaxHighlighter
+        style={vscDarkPlus}
+        language={match[1]}
+        PreTag={PreBlock}
+        customStyle={{
+          borderRadius: "0.5rem",
+          margin: 0,
+        }}
+        {...(props as any)}
+      >
+        {String(children).replace(/\n$/, "")}
+      </SyntaxHighlighter>
+    ) : (
+      <code className={className} {...(props as any)}>
+        {children}
+      </code>
+    );
   };
 
   return (
@@ -434,11 +457,11 @@ export default function AgentPage() {
               </button>
             </div>
 
-            <pre className="bg-black/50 rounded-lg p-4 overflow-x-auto text-sm">
-              <code className="text-gray-300">
-                {skillCode.substring(0, 500)}...
-              </code>
-            </pre>
+            <div className="bg-black/50 rounded-lg p-4 max-h-96 overflow-y-auto overflow-x-auto text-sm prose prose-invert prose-sm max-w-none">
+              <ReactMarkdown components={{ code: CodeBlock }}>
+                {skillCode}
+              </ReactMarkdown>
+            </div>
 
             <button
               onClick={handleCopy}
