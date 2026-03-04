@@ -48,6 +48,7 @@ jobs:
         env:
           NODE_ENV: production
           NEXT_PUBLIC_SOLANA_RPC_URL: ${{secrets.NEXT_PUBLIC_SOLANA_RPC_URL}}
+          NEXT_PUBLIC_ACTIONCODES_AUTH_TOKEN: ${{secrets.NEXT_PUBLIC_ACTIONCODES_AUTH_TOKEN}}
 
       - name: Deploy to external repository
         uses: peaceiris/actions-gh-pages@v3
