@@ -51,6 +51,18 @@ export default function Hero({
             animate="visible"
             variants={fadeInUpStagger}
           >
+            <motion.div className="mb-4" variants={fadeInUp}>
+              <a
+                href="/"
+                className="inline-flex items-center gap-1.5 text-sm text-white/60 hover:text-white transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Choose your side
+              </a>
+            </motion.div>
+
             <motion.div className="mb-8" variants={fadeInUp}>
               <span className="inline-flex items-center gap-2 rounded-full glass px-4 py-1.5 text-sm font-medium text-accent-light border border-accent/20">
                 <span className="relative flex h-2 w-2">

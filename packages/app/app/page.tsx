@@ -5,7 +5,7 @@ import Footer from "@/components/Footer";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-primary-dark">
+    <div className="min-h-screen bg-primary-dark flex flex-col">
       <div className="absolute inset-0 bg-mesh" />
 
       {/* Ambient background effects */}
@@ -31,7 +31,7 @@ export default function Home() {
         }}
       />
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 flex-1">
         <motion.div
           className="relative z-10 mx-auto max-w-4xl text-center"
           initial="hidden"
@@ -67,66 +67,11 @@ export default function Home() {
             your use case.
           </motion.p>
 
-          {/* Mode Selector Cards */}
+          {/* Mode Selector Cards — Agent first */}
           <motion.div
             className="grid md:grid-cols-2 gap-6 mb-12"
             variants={fadeInUp}
           >
-            {/* Human Mode Card */}
-            <motion.a
-              href="/human"
-              className="group relative overflow-hidden rounded-2xl glass border border-accent/20 p-8 hover:border-accent/40 transition-all duration-300"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <div className="relative z-10">
-                <div className="mb-4 inline-flex items-center justify-center w-16 h-16 rounded-xl bg-accent/10 border border-accent/20">
-                  <svg
-                    className="w-8 h-8 text-accent"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.5}
-                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                    />
-                  </svg>
-                </div>
-
-                <h2 className="mb-3 text-2xl font-display font-semibold text-white">
-                  Human Mode
-                </h2>
-
-                <p className="mb-4 text-muted">
-                  Recurring allowances for family, partners, anyone you care
-                  about. Payments execute automatically on schedule.
-                </p>
-
-                <div className="flex items-center gap-2 text-accent font-medium group-hover:gap-3 transition-all">
-                  <span>Pocket Money</span>
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 7l5 5m0 0l-5 5m5-5H6"
-                    />
-                  </svg>
-                </div>
-              </div>
-
-              {/* Hover gradient effect */}
-              <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-            </motion.a>
-
             {/* Agent Mode Card */}
             <motion.a
               href="/agent"
@@ -162,8 +107,25 @@ export default function Home() {
 
                 <div className="flex items-center gap-2 text-accent font-medium group-hover:gap-3 transition-all">
                   <span>Allowly Agent</span>
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </div>
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+            </motion.a>
+
+            {/* Human Mode Card */}
+            <motion.a
+              href="/human"
+              className="group relative overflow-hidden rounded-2xl glass border border-accent/20 p-8 hover:border-accent/40 transition-all duration-300"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <div className="relative z-10">
+                <div className="mb-4 inline-flex items-center justify-center w-16 h-16 rounded-xl bg-accent/10 border border-accent/20">
                   <svg
-                    className="w-5 h-5"
+                    className="w-8 h-8 text-accent"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -171,14 +133,28 @@ export default function Home() {
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 7l5 5m0 0l-5 5m5-5H6"
+                      strokeWidth={1.5}
+                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
                     />
                   </svg>
                 </div>
-              </div>
 
-              {/* Hover gradient effect */}
+                <h2 className="mb-3 text-2xl font-display font-semibold text-white">
+                  Human Mode
+                </h2>
+
+                <p className="mb-4 text-muted">
+                  Recurring allowances for family, partners, anyone you care
+                  about. Payments execute automatically on schedule.
+                </p>
+
+                <div className="flex items-center gap-2 text-accent font-medium group-hover:gap-3 transition-all">
+                  <span>Pocket Money</span>
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </div>
+              </div>
               <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
             </motion.a>
           </motion.div>
