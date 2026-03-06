@@ -44,7 +44,7 @@ export function SolanaWalletProvider({
 
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect={(adapter) => adapter.name !== ActionCodesWalletName}>
+      <WalletProvider wallets={wallets} autoConnect={(adapter) => Promise.resolve(adapter.name !== ActionCodesWalletName)}>
         <WalletModalProvider>{children}</WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>
