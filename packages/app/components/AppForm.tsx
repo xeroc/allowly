@@ -3,7 +3,6 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { ConnectWallet } from "@/components/ConnectWallet";
 import { CreatePolicyForm } from "@/components/CreatePolicyForm";
 import { PolicyList } from "@/components/PolicyList";
 import { PolicyRefreshProvider } from "@/components/PolicyRefreshContext";
@@ -13,29 +12,30 @@ import { AgentPolicyForm } from "./AgentPolicyForm";
 type AppFormMode = "human" | "agent";
 
 
-function AppFormCard({ mode }: { mode: AppFormMode }) {
+function AppFormCard({ mode, compact = false }: { mode: AppFormMode; compact?: boolean }) {
   const { connected } = useWallet();
   const isHuman = mode === "human";
 
   return (
     <div className="relative">
       <div className="absolute inset-0 bg-accent/20 blur-3xl rounded-3xl pointer-events-none" />
-      <div className="relative glass rounded-3xl p-8">
-        {connected ? (
-          <PolicyRefreshProvider>
-            <motion.div
-              className="grid grid-flow-row gap-6"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              {isHuman ? <CreatePolicyForm /> : <AgentPolicyForm />}
-              <div className="h-px bg-accent/20 my-4" />
-              <PolicyList />
-            </motion.div>
-          </PolicyRefreshProvider>
-        ) : null}
-        <ConnectWallet />
+      <div className={`relative glass rounded-3xl ${compact ? "p-5" : "p-8"}`}>
+        <PolicyRefreshProvider>
+          <motion.div
+            className={`grid grid-flow-row ${compact ? "gap-4" : "gap-6"}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            {isHuman ? <CreatePolicyForm compact={compact} /> : <AgentPolicyForm compact={compact} />}
+            {connected && (
+              <>
+                <div className="h-px bg-accent/20" />
+                <PolicyList />
+              </>
+            )}
+          </motion.div>
+        </PolicyRefreshProvider>
       </div>
     </div>
   );
@@ -45,7 +45,7 @@ export default function AppForm({ mode = "human", compact = false }: { mode?: Ap
   const isHuman = mode === "human";
 
   if (compact) {
-    return <AppFormCard mode={mode} />;
+    return <AppFormCard mode={mode} compact />;
   }
 
   return (
