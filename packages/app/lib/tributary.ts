@@ -10,8 +10,8 @@ import {
   PaymentFrequency,
   UserPayment,
   createMemoBuffer,
+  IWallet,
 } from "@tributary-so/sdk";
-import * as anchor from "@coral-xyz/anchor";
 import BN from "bn.js";
 import { WalletContextState } from "@solana/wallet-adapter-react";
 import config from "../constants";
@@ -118,7 +118,7 @@ function getTributary(wallet: WalletContextState): Tributary {
     signTransaction: wallet.signTransaction!,
     signAllTransactions: wallet.signAllTransactions!,
   };
-  return new Tributary(connection, anchorWallet as unknown as anchor.Wallet);
+  return new Tributary(connection, anchorWallet as IWallet);
 }
 
 function mapFrequency(
@@ -296,9 +296,7 @@ export async function getPolicies(
   if (!userPayment) {
     return { subscriptions: [], payAsYouGo: [], userPaymentPubkey: null };
   }
-  const policies = await tributary.getPaymentPoliciesByUser(
-    userPayment.pubkey,
-  );
+  const policies = await tributary.getPaymentPoliciesByUser(userPayment.pubkey);
   const subscriptionPolicies: SubscriptionPolicy[] = [];
   const payAsYouGoPolicies: PayAsYouGoPolicy[] = [];
 
