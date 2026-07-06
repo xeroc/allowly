@@ -1,7 +1,7 @@
 ---
 # allowly-m7fc
 title: Remove 5 unused framer-motion variants from lib/animations.ts
-status: todo
+status: completed
 type: task
 priority: normal
 tags:
@@ -9,7 +9,7 @@ tags:
     - delete
     - animations
 created_at: 2026-07-06T12:37:33Z
-updated_at: 2026-07-06T12:37:33Z
+updated_at: 2026-07-06T13:36:44Z
 parent: allowly-rhix
 ---
 
@@ -30,3 +30,7 @@ parent: allowly-rhix
 **Verify**: lint clean, build clean, no visual regressions on `/`, `/human`, `/agent`.
 
 **Risk**: low. Verify counts with: `grep -rn "<NAME>" packages/app --include="*.tsx" --include="*.ts" | grep -v "lib/animations.ts"`
+
+## Summary of Changes
+
+Removed 5 unused variants (staggerContainer, slideInLeft, slideInRight, cardReveal, pageTransition) from packages/app/lib/animations.ts (~30 lines). Kept the 10 in-use variants (verified via grep counts). Build clean. Lands in the ponytail-audit cleanup commit on branch bean-allowly-rhix.

@@ -1,7 +1,7 @@
 ---
 # allowly-9tjg
 title: Extract sendTx helper to dedupe 5 tx-send blocks
-status: todo
+status: completed
 type: task
 priority: high
 tags:
@@ -9,7 +9,7 @@ tags:
     - shrink
     - tributary-ts
 created_at: 2026-07-06T12:36:31Z
-updated_at: 2026-07-06T12:36:31Z
+updated_at: 2026-07-06T13:37:03Z
 parent: allowly-rhix
 blocked_by:
     - allowly-g88e
@@ -40,3 +40,7 @@ Each public fn becomes: build instructions → `await sendTx(wallet, instruction
 **Verify**: each of the 5 callers still works (create allowance, create paygo, pause, resume, cancel).
 
 **Risk**: medium — same blast radius as the confirmTx removal. Land AFTER `allowly-g88e` (confirm-replacement) so the helper is built against the new confirm path.
+
+## Summary of Changes
+
+Added sendTx(wallet, instructions, connection) helper in packages/app/lib/tributary.ts (~15 lines) and replaced the 5 duplicated tx-send blocks in createAllowance, createPayAsYouGo, pausePolicy, resumePolicy, cancelPolicy. Built against the new confirmTransaction path (allowly-g88e landed first, in the same commit). The helper encapsulates: Transaction.add -> getLatestBlockhash -> feePayer -> signTransaction -> sendRawTransaction -> confirmTransaction. Build clean. Lands in the ponytail-audit cleanup commit on branch bean-allowly-rhix.

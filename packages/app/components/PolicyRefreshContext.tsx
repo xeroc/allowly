@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useState,
+  useRef,
   useCallback,
   ReactNode,
 } from "react";
@@ -19,18 +20,12 @@ const PolicyRefreshContext = createContext<
 
 export function PolicyRefreshProvider({ children }: { children: ReactNode }) {
   const [refreshKey, setRefreshKey] = useState(0);
-  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const triggerRefresh = useCallback(() => {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-    const newTimeoutId = setTimeout(() => {
-      setRefreshKey((prev) => prev + 1);
-      setTimeoutId(null);
-    }, 1500);
-    setTimeoutId(newTimeoutId);
-  }, [timeoutId]);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => setRefreshKey((n) => n + 1), 1500);
+  }, []);
 
   return (
     <PolicyRefreshContext.Provider value={{ refreshKey, triggerRefresh }}>

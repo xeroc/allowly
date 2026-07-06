@@ -1,14 +1,14 @@
 ---
 # allowly-icqs
 title: Simplify PolicyRefreshContext — useState → useRef for timeout handle
-status: todo
+status: completed
 type: task
 priority: low
 tags:
     - ponytail
     - shrink
 created_at: 2026-07-06T12:38:12Z
-updated_at: 2026-07-06T12:38:12Z
+updated_at: 2026-07-06T13:37:03Z
 parent: allowly-rhix
 ---
 
@@ -31,3 +31,7 @@ const triggerRefresh = useCallback(() => {
 **Verify**: create a subscription policy → policy list refreshes ~1.5s later (debounced) → still works.
 
 **Risk**: low. Self-contained component.
+
+## Summary of Changes
+
+Switched the debounce timeout handle from useState to useRef in packages/app/components/PolicyRefreshContext.tsx; triggerRefresh useCallback now has an empty dependency array (no longer recreatedates on every timer fire). Build clean. Lands in the ponytail-audit cleanup commit on branch bean-allowly-rhix.
