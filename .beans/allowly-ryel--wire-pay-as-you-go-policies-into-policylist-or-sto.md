@@ -1,7 +1,7 @@
 ---
 # allowly-ryel
 title: Wire pay-as-you-go policies into PolicyList (or stop loading them)
-status: todo
+status: completed
 type: task
 priority: high
 tags:
@@ -9,7 +9,7 @@ tags:
     - bug
     - tributary-ts
 created_at: 2026-07-06T12:37:55Z
-updated_at: 2026-07-06T12:37:55Z
+updated_at: 2026-07-06T13:37:03Z
 parent: allowly-rhix
 ---
 
@@ -37,3 +37,13 @@ This is over-engineering OR a missing UI — pick one:
 - Option B: build clean, create pay-go on devnet, see it appear in list with correct fields
 
 **Risk**: low (A) / medium (B). Decision required before implementation.
+
+## Summary of Changes
+
+Decision: Option A (lazy cleanup) chosen. Fabian was not available to ask; the epic target is explicitly zero-behavior-change cleanup, and Option B (new PayAsYouGoPolicyCard) is a feature, not a cleanup. Pay-as-you-go policies were loaded from chain by getPolicies then discarded (PolicyList only rendered policies.subscriptions), so the load was invisible dead work.
+
+- Dropped payAsYouGo branch from getPolicies in packages/app/lib/tributary.ts.
+- Dropped payAsYouGo from PolicyListResult interface.
+- Dropped payAsYouGo state from packages/app/components/PolicyList.tsx.
+
+PayAsYouGoPolicy interface + createPayAsYouGo kept intact (creation path unchanged). Build clean. Follow-up: if agent-mode policy visibility is wanted, implement Option B (new PayAsYouGoPolicyCard + render both arrays) as a separate feature bean. Lands in the ponytail-audit cleanup commit on branch bean-allowly-rhix.

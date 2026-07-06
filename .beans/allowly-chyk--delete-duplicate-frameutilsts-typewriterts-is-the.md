@@ -1,7 +1,7 @@
 ---
 # allowly-chyk
 title: Delete duplicate frameUtils.ts (typewriter.ts is the live one)
-status: todo
+status: completed
 type: task
 priority: normal
 tags:
@@ -9,7 +9,7 @@ tags:
     - delete
     - remotion
 created_at: 2026-07-06T12:37:14Z
-updated_at: 2026-07-06T12:37:14Z
+updated_at: 2026-07-06T13:36:26Z
 parent: allowly-rhix
 ---
 
@@ -22,3 +22,7 @@ parent: allowly-rhix
 **Verify**: `pnpm --filter remotion build` clean. Video unchanged.
 
 **Risk**: zero.
+
+## Summary of Changes
+
+Deleted packages/remotion/src/utils/frameUtils.ts (11 lines; byte-identical duplicate of typewriter.ts, the live one). pnpm --filter remotion build clean. Lands in the ponytail-audit cleanup commit on branch bean-allowly-rhix.

@@ -1,7 +1,7 @@
 ---
 # allowly-cafs
 title: Remove 6 unused Tailwind animations + keyframes
-status: todo
+status: completed
 type: task
 priority: normal
 tags:
@@ -9,7 +9,7 @@ tags:
     - delete
     - tailwind
 created_at: 2026-07-06T12:37:33Z
-updated_at: 2026-07-06T12:37:33Z
+updated_at: 2026-07-06T13:36:44Z
 parent: allowly-rhix
 ---
 
@@ -29,3 +29,7 @@ parent: allowly-rhix
 **Verify**: lint clean, build clean. Verify with: `grep -rn "animate-fade-in\|animate-slide-up\|animate-scale-in\|animate-float\|animate-pulse-glow\|animate-shimmer" packages/app` (expect zero hits).
 
 **Risk**: low. Tailwind purges unused classes anyway, but the config lines themselves are removable.
+
+## Summary of Changes
+
+Removed 6 unused animation + keyframes entries (fade-in, slide-up, scale-in, float, pulse-glow, shimmer) from packages/app/tailwind.config.ts (~30 lines). Grep confirmed zero animate-* usages; all app animation goes through framer-motion. Build clean. Lands in the ponytail-audit cleanup commit on branch bean-allowly-rhix.

@@ -30,10 +30,6 @@ const footerLinks = {
       external: true,
     },
   ],
-  legal: [
-    { label: "Privacy Policy", href: "#" },
-    { label: "Terms of Service", href: "#" },
-  ],
 };
 
 const socialLinks = [
@@ -245,29 +241,6 @@ export default function Footer() {
                     ))}
                   </ul>
                 </motion.div>
-
-                {/* <motion.div */}
-                {/*   initial={{ opacity: 0, y: 20 }} */}
-                {/*   whileInView={{ opacity: 1, y: 0 }} */}
-                {/*   viewport={{ once: true }} */}
-                {/*   transition={{ delay: 0.4, duration: 0.6 }} */}
-                {/* > */}
-                {/*   <h3 className="text-sm font-semibold text-white mb-4"> */}
-                {/*     Legal */}
-                {/*   </h3> */}
-                {/*   <ul className="space-y-3"> */}
-                {/*     {footerLinks.legal.map((link) => ( */}
-                {/*       <li key={link.label}> */}
-                {/*         <a */}
-                {/*           href={link.href} */}
-                {/*           className="text-sm text-muted hover:text-white transition-colors" */}
-                {/*         > */}
-                {/*           {link.label} */}
-                {/*         </a> */}
-                {/*       </li> */}
-                {/*     ))} */}
-                {/*   </ul> */}
-                {/* </motion.div> */}
               </div>
             </div>
           </div>
