@@ -11,7 +11,6 @@ export function PolicyList() {
   const { refreshKey } = usePolicyRefresh();
   const [policies, setPolicies] = useState<PolicyListResult>({
     subscriptions: [],
-    payAsYouGo: [],
     userPaymentPubkey: null,
   });
   const [loading, setLoading] = useState(true);
@@ -20,7 +19,7 @@ export function PolicyList() {
   useEffect(() => {
     async function fetch() {
       if (!connected || !publicKey) {
-        setPolicies({ subscriptions: [], payAsYouGo: [], userPaymentPubkey: null });
+        setPolicies({ subscriptions: [], userPaymentPubkey: null });
         setLoading(false);
         return;
       }
@@ -38,7 +37,8 @@ export function PolicyList() {
   }, [connected, publicKey, wallet, refreshKey]);
 
   if (!connected) return null;
-  if (loading) return <div className="text-sm text-muted">Loading policies...</div>;
+  if (loading)
+    return <div className="text-sm text-muted">Loading policies...</div>;
   if (error) return <div className="text-sm text-red-400/70">{error}</div>;
   if (policies.subscriptions.length === 0)
     return <div className="text-sm text-muted">No active allowances yet.</div>;

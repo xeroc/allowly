@@ -7,8 +7,6 @@ import Footer from "@/components/Footer";
 import AppForm from "@/components/AppForm";
 import { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 export default function AgentPage() {
   const [copied, setCopied] = useState(false);
@@ -39,43 +37,6 @@ export default function AgentPage() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  };
-
-  const PreBlock = ({ children }: { children: React.ReactNode }) => (
-    <pre className="!mt-0 !mb-0 !bg-transparent !p-0">{children}</pre>
-  );
-
-  const CodeBlock = ({
-    node,
-    inline,
-    className,
-    children,
-    ...props
-  }: {
-    node?: any;
-    inline?: boolean;
-    className?: string;
-    children?: React.ReactNode;
-  }) => {
-    const match = /language-(\w+)/.exec(className || "");
-    return !inline && match ? (
-      <SyntaxHighlighter
-        style={vscDarkPlus}
-        language={match[1]}
-        PreTag={PreBlock}
-        customStyle={{
-          borderRadius: "0.5rem",
-          margin: 0,
-        }}
-        {...(props as any)}
-      >
-        {String(children).replace(/\n$/, "")}
-      </SyntaxHighlighter>
-    ) : (
-      <code className={className} {...(props as any)}>
-        {children}
-      </code>
-    );
   };
 
   return (
@@ -112,9 +73,7 @@ export default function AgentPage() {
             </div>
 
             <div className="bg-black/50 rounded-lg p-4 max-h-96 overflow-y-auto overflow-x-auto text-sm prose prose-invert prose-sm max-w-none">
-              <ReactMarkdown components={{ code: CodeBlock }}>
-                {skillCode}
-              </ReactMarkdown>
+              <ReactMarkdown>{skillCode}</ReactMarkdown>
             </div>
 
             <button

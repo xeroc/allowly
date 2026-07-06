@@ -2,8 +2,7 @@ import {
   Connection,
   PublicKey,
   Transaction,
-  TransactionSignature,
-  SignatureStatus,
+  TransactionInstruction,
 } from "@solana/web3.js";
 import {
   Tributary,
@@ -59,7 +58,6 @@ export interface CreatePayAsYouGoParams {
 
 export interface PolicyListResult {
   subscriptions: SubscriptionPolicy[];
-  payAsYouGo: PayAsYouGoPolicy[];
   userPaymentPubkey: PublicKey | null;
 }
 
@@ -69,46 +67,20 @@ interface AnchorWallet {
   signAllTransactions: (transactions: Transaction[]) => Promise<Transaction[]>;
 }
 
-async function confirmTransactionWithStatus(
+async function sendTx(
+  wallet: WalletContextState,
+  instructions: TransactionInstruction[] | TransactionInstruction,
   connection: Connection,
-  signature: TransactionSignature,
-  commitment: "processed" | "confirmed" | "finalized" = "confirmed",
-  timeout: number = 60000, // 60 seconds
-): Promise<SignatureStatus> {
-  const start = Date.now();
-
-  while (Date.now() - start < timeout) {
-    const { value } = await connection.getSignatureStatus(signature);
-
-    if (value === null) {
-      // Transaction not found yet, wait and retry
-      await sleep(500);
-      continue;
-    }
-
-    // Check if there's an error
-    if (value.err) {
-      throw new Error(`Transaction failed: ${JSON.stringify(value.err)}`);
-    }
-
-    // Check if we've reached the desired commitment level
-    if (
-      commitment === "processed" ||
-      (commitment === "confirmed" &&
-        value.confirmationStatus !== "processed") ||
-      (commitment === "finalized" && value.confirmationStatus === "finalized")
-    ) {
-      return value;
-    }
-
-    await sleep(500);
-  }
-
-  throw new Error(`Transaction confirmation timeout after ${timeout}ms`);
-}
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+): Promise<void> {
+  const tx = new Transaction().add(
+    ...(Array.isArray(instructions) ? instructions : [instructions]),
+  );
+  const { blockhash } = await connection.getLatestBlockhash();
+  tx.recentBlockhash = blockhash;
+  tx.feePayer = wallet.publicKey!;
+  const signed = await wallet.signTransaction!(tx);
+  const txid = await connection.sendRawTransaction(signed.serialize());
+  await connection.confirmTransaction(txid, "confirmed");
 }
 
 function getTributary(wallet: WalletContextState): Tributary {
@@ -185,18 +157,7 @@ export async function createAllowance(
     false,
   );
 
-  const transaction = new Transaction().add(...instructions);
-  const { blockhash } =
-    await tributary.program.provider.connection.getLatestBlockhash();
-  transaction.recentBlockhash = blockhash;
-  transaction.feePayer = parentWallet.publicKey!;
-
-  const signedTx = await parentWallet.signTransaction!(transaction);
-  const txid = await tributary.program.provider.connection.sendRawTransaction(
-    signedTx.serialize(),
-  );
-  console.log(txid);
-  await confirmTransactionWithStatus(tributary.connection, txid, "confirmed");
+  await sendTx(parentWallet, instructions, tributary.connection);
 
   const userPayment = await getUserPayment(parentWallet);
 
@@ -248,18 +209,7 @@ export async function createPayAsYouGo(
     createMemoBuffer("allowly.app: agent allowance", 64),
   );
 
-  const transaction = new Transaction().add(...instructions);
-  const { blockhash } =
-    await tributary.program.provider.connection.getLatestBlockhash();
-  transaction.recentBlockhash = blockhash;
-  transaction.feePayer = humanWallet.publicKey!;
-
-  const signedTx = await humanWallet.signTransaction!(transaction);
-  const txid = await tributary.program.provider.connection.sendRawTransaction(
-    signedTx.serialize(),
-  );
-  console.log(txid);
-  await confirmTransactionWithStatus(tributary.connection, txid, "confirmed");
+  await sendTx(humanWallet, instructions, tributary.connection);
 
   const userPayment = await getUserPayment(humanWallet);
 
@@ -294,11 +244,10 @@ export async function getPolicies(
   const tributary = getTributary(wallet);
   const userPayment = await getUserPayment(wallet);
   if (!userPayment) {
-    return { subscriptions: [], payAsYouGo: [], userPaymentPubkey: null };
+    return { subscriptions: [], userPaymentPubkey: null };
   }
   const policies = await tributary.getPaymentPoliciesByUser(userPayment.pubkey);
   const subscriptionPolicies: SubscriptionPolicy[] = [];
-  const payAsYouGoPolicies: PayAsYouGoPolicy[] = [];
 
   for (const p of policies) {
     if ("subscription" in p.account.policyType) {
@@ -314,28 +263,11 @@ export async function getPolicies(
         totalPaid: p.account.totalPaid,
         createdAt: p.account.createdAt,
       });
-    } else if ("payAsYouGo" in p.account.policyType) {
-      const owner = userPayment?.userPayment.owner || wallet.publicKey!;
-      payAsYouGoPolicies.push({
-        id: p.account.policyId,
-        from: owner,
-        to: p.account.recipient,
-        maxAmountPerPeriod:
-          p.account.policyType.payAsYouGo!.maxAmountPerPeriod || new BN(0),
-        maxChunkAmount:
-          p.account.policyType.payAsYouGo!.maxChunkAmount || new BN(0),
-        periodLength:
-          p.account.policyType.payAsYouGo!.periodLengthSeconds || new BN(0),
-        status: p.account.status.active ? "active" : "paused",
-        totalPaid: p.account.totalPaid,
-        createdAt: p.account.createdAt,
-      });
     }
   }
 
   return {
     subscriptions: subscriptionPolicies,
-    payAsYouGo: payAsYouGoPolicies,
     userPaymentPubkey: userPayment?.pubkey || null,
   };
 }
@@ -353,17 +285,7 @@ export async function pausePolicy(
     { paused: {} },
   );
 
-  const transaction = new Transaction().add(instruction);
-  const { blockhash } = await tributary.connection.getLatestBlockhash();
-  transaction.recentBlockhash = blockhash;
-  transaction.feePayer = wallet.publicKey!;
-
-  const signedTx = await wallet.signTransaction!(transaction);
-  const txid = await tributary.connection.sendRawTransaction(
-    signedTx.serialize(),
-  );
-  console.log(txid);
-  await confirmTransactionWithStatus(tributary.connection, txid, "confirmed");
+  await sendTx(wallet, instruction, tributary.connection);
 }
 
 export async function resumePolicy(
@@ -379,17 +301,7 @@ export async function resumePolicy(
     { active: {} },
   );
 
-  const transaction = new Transaction().add(instruction);
-  const { blockhash } = await tributary.connection.getLatestBlockhash();
-  transaction.recentBlockhash = blockhash;
-  transaction.feePayer = wallet.publicKey!;
-
-  const signedTx = await wallet.signTransaction!(transaction);
-  const txid = await tributary.connection.sendRawTransaction(
-    signedTx.serialize(),
-  );
-  console.log(txid);
-  await confirmTransactionWithStatus(tributary.connection, txid, "confirmed");
+  await sendTx(wallet, instruction, tributary.connection);
 }
 
 export async function cancelPolicy(
@@ -401,15 +313,5 @@ export async function cancelPolicy(
 
   const instruction = await tributary.deletePaymentPolicy(tokenMint, policyId);
 
-  const transaction = new Transaction().add(instruction);
-  const { blockhash } = await tributary.connection.getLatestBlockhash();
-  transaction.recentBlockhash = blockhash;
-  transaction.feePayer = wallet.publicKey!;
-
-  const signedTx = await wallet.signTransaction!(transaction);
-  const txid = await tributary.connection.sendRawTransaction(
-    signedTx.serialize(),
-  );
-  console.log(txid);
-  await confirmTransactionWithStatus(tributary.connection, txid, "confirmed");
+  await sendTx(wallet, instruction, tributary.connection);
 }
