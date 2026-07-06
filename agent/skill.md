@@ -474,4 +474,3 @@ Check:
 - Claim amount is within per-claim limit
 - Agent wallet has SOL for transaction fees (~0.0005 SOL)
 - Gateway is authorized for the policy
-
