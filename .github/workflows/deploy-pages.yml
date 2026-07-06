@@ -39,11 +39,11 @@ jobs:
         run: pnpm install
 
       - name: Install dependencies
-        working-directory: ./packages/app
+        working-directory: ./apps/app
         run: pnpm install
 
       - name: Build App
-        working-directory: ./packages/app
+        working-directory: ./apps/app
         run: pnpm run build
         env:
           NODE_ENV: production
@@ -55,5 +55,5 @@ jobs:
         if: github.ref == 'refs/heads/main'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: packages/app/out
+          publish_dir: apps/app/out
           cname: allowly.app
